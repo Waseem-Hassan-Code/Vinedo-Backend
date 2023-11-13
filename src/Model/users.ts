@@ -55,11 +55,19 @@ export const deleteUserById = (id: string) => {
 };
 
 export const addProfilePicture = (id: string, imgPath: string) => {
-  return UserModel.findOneAndUpdate(
-    { _id: id },
-    { $set: { "avatar.localPath": imgPath } },
-    { new: true }
-  );
+  const updateQuery = { $set: { "avatar.localPath": imgPath } };
+
+  return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
+    new: true,
+  });
+};
+
+export const deleteProfilePicture = (id: string) => {
+  const updateQuery = { $set: { "avatar.localPath": "" } };
+
+  return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
+    new: true,
+  });
 };
 
 export const updateUserById = (id: string, values: Record<string, any>) =>

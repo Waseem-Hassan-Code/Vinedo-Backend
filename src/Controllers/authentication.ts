@@ -9,7 +9,7 @@ import {
   createUser,
   getUserByEmail,
   updateUserPassword,
-  addProfilePicture,
+  UserModel,
 } from "../Model/users";
 import express, { response } from "express";
 import { ResponseDto } from "Model/response";
@@ -260,63 +260,5 @@ export const updatePassword = async (
       result: {},
     };
     return res.json(response);
-  }
-};
-
-//---------------------------upload/update profile picture--------------------------------
-
-export const uploadProfilePicture = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const { id } = req.body; // Remove the 'URL' field from req.body
-
-    if (!id) {
-      const response = {
-        status: 400,
-        message: "Invalid request. 'email' is required.",
-        result: {},
-      };
-      return res.status(400).json(response);
-    }
-
-    const imageURL = req.file?.path;
-    console.log("path is here " + imageURL);
-
-    if (!imageURL) {
-      const response = {
-        status: 400,
-        message: "No file uploaded or file URL not found.",
-        result: {},
-      };
-      return res.status(400).json(response);
-    }
-
-    const upload = await addProfilePicture(id, imageURL);
-
-    if (upload) {
-      const response = {
-        status: 200,
-        message: "Profile Picture Updated!",
-        result: {},
-      };
-      return res.json(response);
-    } else {
-      const response = {
-        status: 400,
-        message: "We couldn't update your picture at the moment!",
-        result: {},
-      };
-      return res.status(400).json(response);
-    }
-  } catch (error) {
-    console.error(error);
-    const response = {
-      status: 500,
-      message: "Internal Server Error",
-      result: {},
-    };
-    return res.status(500).json(response);
   }
 };
