@@ -15,7 +15,7 @@ export default (router: express.Router) => {
   );
 
   router.post(
-    "/uploadFile/Avatar",
+    "/uploadFile/Video",
     authenticateToken,
     uploadVideo.single("Video"),
     uploadNewVideo

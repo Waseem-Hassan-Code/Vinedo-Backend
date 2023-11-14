@@ -93,8 +93,13 @@ export const uploadNewVideo = async (
       };
       return res.status(400).json(response);
     }
-    const video = await addVideo({ title, description, videoUrl, creatorId });
-    if (video != null) {
+    const video = await addVideo({
+      title,
+      description,
+      url: videoUrl,
+      creatorId,
+    });
+    if (video) {
       const response = {
         message: "Video uploaded sucessfully.",
         result: { video },

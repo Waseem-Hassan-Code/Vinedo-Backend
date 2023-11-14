@@ -22,7 +22,7 @@ const VideoShema = new mongoose.Schema({
 export const VideoModel = mongoose.model("videos", VideoShema);
 
 export const addVideo = (values: Record<string, any>) => {
-  new VideoModel(values).save().then((video) => video.toObject());
+  return new VideoModel(values).save().then((video) => video.toObject());
 };
 
 export const deleteVideo = (videoId: string) => {
