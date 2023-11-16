@@ -5,11 +5,14 @@ import {
   getCreatorSubscriptionDetails,
   upDateSubscriptionDetails,
 } from "../Model/creatorSubDetails";
+<<<<<<< HEAD
 import {
   checkSubscriptionRequest,
   acceptSubscriptionRequest,
   denySubscriptionRequest,
 } from "../Model/subscriptions";
+=======
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
 
 export const setCreatorSub = async (
   req: express.Request,
@@ -49,7 +52,11 @@ export const setCreatorSub = async (
     return res.sendStatus(500).json(response);
   }
 };
+<<<<<<< HEAD
 //===============================================================================
+=======
+//----------------------------------------------------------------------
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
 export const getCreatorSub = async (
   req: express.Request,
   res: express.Response
@@ -85,7 +92,11 @@ export const getCreatorSub = async (
     return res.sendStatus(500).json(response);
   }
 };
+<<<<<<< HEAD
 //===============================================================================
+=======
+//----------------------------------------------------------------------
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
 
 export const updateCreatorSub = async (
   req: express.Request,
@@ -125,6 +136,7 @@ export const updateCreatorSub = async (
     return res.sendStatus(500).json(response);
   }
 };
+<<<<<<< HEAD
 
 //===============================================================================
 
@@ -257,3 +269,5 @@ export const rejectSubRequest = async (
 };
 
 //===============================================================================
+=======
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb

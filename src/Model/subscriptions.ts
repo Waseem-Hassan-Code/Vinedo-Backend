@@ -20,7 +20,11 @@ const userSubscriptionShema = new mongoose.Schema({
 
   userQuotation: {
     type: Number,
+<<<<<<< HEAD
     require: false,
+=======
+    require: true,
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
   },
 
   isSubscribed: { type: Boolean, default: false },
@@ -34,7 +38,11 @@ export const UserSubscriptionModel = mongoose.model(
 );
 
 export const requestSubscription = (values: Record<string, any>) => {
+<<<<<<< HEAD
   return new UserSubscriptionModel(values)
+=======
+  new UserSubscriptionModel(values)
+>>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
     .save()
     .then((subscription) => subscription.toObject());
 };
