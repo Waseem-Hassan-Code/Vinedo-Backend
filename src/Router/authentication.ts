@@ -3,6 +3,7 @@ import {
   forgetPassword,
   login,
   register,
+  registerCreator,
   updatePassword,
 } from "../Controllers/authentication";
 import { authenticateToken } from "../Middleware";
@@ -13,4 +14,5 @@ export default (router: express.Router) => {
   router.post("/auth/login", login);
   router.post("/auth/forgetPassword", forgetPassword);
   router.post("/auth/updatePassword", updatePassword);
+  router.get("/auth/register/creator", registerCreator);
 };

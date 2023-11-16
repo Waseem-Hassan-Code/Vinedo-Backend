@@ -7,6 +7,7 @@ import {
 } from "../Model/users";
 import { deleteFile } from "../Helpers";
 import { addVideo } from "../Model/videos";
+import { getUserById } from "../Model/users";
 
 export const uploadProfilePicture = async (
   req: express.Request,
@@ -84,6 +85,16 @@ export const uploadNewVideo = async (
       };
       return res.sendStatus(400).json(response);
     }
+
+    const checkCreator = await getUserById(creatorId);
+    if (checkCreator.isContentCreator === false) {
+      const response = {
+        message: "You are not authorized to upload a video.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
     const videoUrl = req.file?.path;
 
     if (!videoUrl) {

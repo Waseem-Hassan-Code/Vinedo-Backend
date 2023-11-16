@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - codingnepalweb.com -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email and Password Validation</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/registration.css" />
+    <!-- Boxicons CSS -->
+    <link
+      href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Google Fonts - Poppins */
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgb(5, 5, 5); 
+      }
+
+      .container {
+        position: relative;
+        max-width: 370px;
+        width: 100%;
+        padding: 25px;
+        border-radius: 8px;
+        background-color: #333; 
+        color: #fff;
+      }
+
+      .container header {
+        font-size: 22px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 20px;
+      }
+
+      .container form {
+        margin-top: 20px;
+      }
+
+      form .field {
+        margin-bottom: 20px;
+      }
+
+      form .input-field {
+        position: relative;
+        height: 55px;
+        width: 100%;
+      }
+
+      .input-field input {
+        height: 100%;
+        width: 100%;
+        outline: none;
+        border: none;
+        border-radius: 8px;
+        padding: 0 15px;
+        border: 1px solid #d1d1d1;
+        background-color: #444; 
+        color: #fff; 
+      }
+
+      .input-field .show-hide {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        color: #919191;
+        cursor: pointer;
+        padding: 3px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 5px;
+        color: #fff; 
+      }
+
+      .field .error {
+        display: flex;
+        align-items: center;
+        margin-top: 6px;
+        color: #d93025;
+        font-size: 13px;
+        display: none;
+      }
+
+      .invalid .error {
+        display: flex;
+      }
+
+      .error .error-icon {
+        margin-right: 6px;
+        font-size: 15px;
+      }
+
+      .button {
+        margin: 25px 0 6px;
+      }
+
+      .button input {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 400;
+        background-color: #03050a;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .button input:hover {
+        background-color: #0e4bf1;
+      }
+
+      .country-dropdown {
+  margin-right: 10px; 
+  position: relative;
+}
+
+.countryCode {
+  width: 100px; 
+  padding: 16px;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+
+
+.countryCode option {
+  width: 100px; 
+}
+
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>Signup</header>
+      <form action="https://www.codinglabweb.com/">
+        <div class="field name-field">
+          <label for="userName">Full Name</label>
+          <div class="input-field">
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              class="userName"
+            />
+          </div>
+          <span class="error name-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">Please enter a valid name</p>
+          </span>
+        </div>
+        <div class="field email-field">
+          <label for="email">Email</label>
+          <div class="input-field">
+            <input type="email" placeholder="Enter your email" class="email" />
+          </div>
+          <span class="error email-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">Please enter a valid email</p>
+          </span>
+        </div>
+        <div class="field dob-field">
+          <label for="dob">Date of Birth</label>
+          <div class="input-field">
+            <input type="date" class="dob" />
+          </div>
+          <span class="error dob-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">Please enter your date of birth</p>
+          </span>
+        </div>
+        <div class="field phone-field" >
+          <label for="phoneNumber">Phone Number</label>
+          <div style="width: 100%; margin-left: auto;">
+            <div class="row">
+              <div class="country-dropdown">
+                <select class="countryCode">
+                  <option value="+1">United States (+1)</option>
+                  <!-- Add other country options here -->
+                </select>
+              </div>
+              <div class="input-field">
+                <input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  class="phoneNumber"
+                />
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          <span class="error phone-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">Please enter a valid phone number</p>
+          </span>
+        </div>
+        <div class="field create-password">
+          <label for="password">Create Password</label>
+          <div class="input-field">
+            <input
+              type="password"
+              placeholder="Create password"
+              class="password"
+            />
+            <i class="bx bx-hide show-hide"></i>
+          </div>
+          <span class="error password-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">
+              Please enter at least 8 characters with a number, symbol, small
+              and capital letter.
+            </p>
+          </span>
+        </div>
+        <div class="field confirm-password">
+          <label for="cPassword">Confirm Password</label>
+          <div class="input-field">
+            <input
+              type="password"
+              placeholder="Confirm password"
+              class="cPassword"
+            />
+            <i class="bx bx-hide show-hide"></i>
+          </div>
+          <span class="error cPassword-error">
+            <i class="bx bx-error-circle error-icon"></i>
+            <p class="error-text">Passwords don't match</p>
+          </span>
+        </div>
+        <div class="input-field button">
+          <input type="submit" value="Submit Now" />
+        </div>
+      </form>
+    </div>
+ 
+  </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.querySelector("form"),
+        nameField = form.querySelector(".name-field"),
+        nameInput = form.querySelector(".userName"),
+        emailField = form.querySelector(".email-field"),
+        emailInput = emailField.querySelector(".email"),
+        dobField = form.querySelector(".dob-field"),
+        dobInput = dobField.querySelector(".dob"),
+        phoneField = form.querySelector(".phone-field"),
+        phoneInput = phoneField.querySelector(".phoneNumber"),
+        passField = form.querySelector(".create-password"),
+        passInput = passField.querySelector(".password"),
+        cPassField = form.querySelector(".confirm-password"),
+        cPassInput = cPassField.querySelector(".cPassword");
+  
+  
+
+        async function populateCountryDropdown() {
+    const countryCodeDropdown = document.querySelector(".countryCode");
+
+    try {
+      // Fetch the list of countries from REST Countries API
+      const response = await fetch("https://restcountries.com/v2/all");
+      const countries = await response.json();
+
+      // Add country codes dynamically
+      countries.forEach((country) => {
+        const option = document.createElement("option");
+        option.value = `+${country.callingCodes[0]}`;
+        option.text = `${country.name} (+${country.callingCodes[0]})`;
+        countryCodeDropdown.add(option);
+      });
+    } catch (error) {
+      console.error("Error fetching country data:", error);
+    }
+  }
+
+  // Call the function to populate the country code dropdown
+  populateCountryDropdown();
+
+
+      function checkEmail() {
+        const emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+        if (!emailInput.value.match(emailPattern)) {
+          return emailField.classList.add("invalid");
+        }
+        emailField.classList.remove("invalid");
+      }
+  
+      
+      function checkDOB() {
+        if (!dobInput.value) {
+          return dobField.classList.add("invalid");
+        }
+        dobField.classList.remove("invalid");
+      }
+  
+      function checkPhoneNumber() {
+        const phonePattern = /^[0-9]{10,}$/;
+        if (!phoneInput.value.match(phonePattern)) {
+          return phoneField.classList.add("invalid");
+        }
+        phoneField.classList.remove("invalid");
+      }
+      
+      const eyeIcons = document.querySelectorAll(".show-hide");
+  
+      eyeIcons.forEach((eyeIcon) => {
+        eyeIcon.addEventListener("click", () => {
+          const pInput = eyeIcon.parentElement.querySelector("input");
+          if (pInput.type === "password") {
+            eyeIcon.classList.replace("bx-hide", "bx-show");
+            return (pInput.type = "text");
+          }
+          eyeIcon.classList.replace("bx-show", "bx-hide");
+          pInput.type = "password";
+        });
+      });
+  
+      function createPass() {
+        const passPattern =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  
+        if (!passInput.value.match(passPattern)) {
+          return passField.classList.add("invalid");
+        }
+        passField.classList.remove("invalid");
+      }
+  
+      function confirmPass() {
+        if (passInput.value !== cPassInput.value || cPassInput.value === "") {
+          return cPassField.classList.add("invalid");
+        }
+        cPassField.classList.remove("invalid");
+      }
+  
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        checkEmail();
+        checkDOB();
+        checkPhoneNumber();
+        createPass();
+        confirmPass();
+  
+        emailInput.addEventListener("keyup", checkEmail);
+        dobInput.addEventListener("change", checkDOB);
+        phoneInput.addEventListener("keyup", checkPhoneNumber);
+        passInput.addEventListener("keyup", createPass);
+        cPassInput.addEventListener("keyup", confirmPass);
+  
+        if (
+          !emailField.classList.contains("invalid") &&
+          !dobField.classList.contains("invalid") &&
+          !phoneField.classList.contains("invalid") &&
+          !passField.classList.contains("invalid") &&
+          !cPassField.classList.contains("invalid")
+        ) {
+          location.href = form.getAttribute("action");
+        }
+      });
+    });
+  </script>
+  </html>
+  
+
+</html>

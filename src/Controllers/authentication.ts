@@ -262,3 +262,12 @@ export const updatePassword = async (
     return res.json(response);
   }
 };
+//=================================================================================
+
+export const registerCreator = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  console.log("Hello");
+  res.render("../ejs/registerCreator.ejs");
+};

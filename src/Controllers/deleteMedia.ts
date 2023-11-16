@@ -3,6 +3,7 @@ import { deleteFile } from "../Helpers";
 import { UserModel, deleteProfilePicture } from "../Model/users";
 import { VideoModel } from "../Model/videos";
 import { VideoCommentsModel } from "../Model/videoComments";
+import { getUserById } from "../Model/users";
 
 //---------------------------Delete profile picture--------------------------------
 export const removeProfilePicture = async (
@@ -71,6 +72,16 @@ export const removeVideo = async (
       };
       return res.status(400).json(response);
     }
+
+    const checkCreator = await getUserById(creatorId);
+    if (checkCreator.isContentCreator === false) {
+      const response = {
+        message: "You are not authorized to upload a video.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
     const videoUrl = await VideoModel.findById(videoId).select("url").exec();
 
     deleteFile(videoUrl.url);

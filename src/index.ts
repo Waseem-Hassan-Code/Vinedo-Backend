@@ -8,6 +8,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import router from "./Router";
 import { Server } from "socket.io";
+import path from "path";
 
 const app = express();
 
@@ -20,6 +21,9 @@ app.use(
 app.use(compression());
 app.use(cookieParser());
 app.use(bodyParser.json());
+
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
 
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);

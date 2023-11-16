@@ -1,6 +1,7 @@
 import express from "express";
 import { VideoModel, addVideo } from "../Model/videos";
 import { VideoCommentsModel, addComment } from "../Model/videoComments";
+import { getUserById } from "../Model/users";
 
 export const getVideo = async (req: express.Request, res: express.Response) => {
   try {
@@ -13,7 +14,7 @@ export const getVideo = async (req: express.Request, res: express.Response) => {
         message: "Video not found.",
         result: {},
       };
-      return res.status(404).json(response); // Change status to 404 for "Not Found"
+      return res.status(404).json(response);
     }
 
     const comments = await VideoCommentsModel.find({
