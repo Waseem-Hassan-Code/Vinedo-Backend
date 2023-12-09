@@ -2,9 +2,14 @@ import express from "express";
 import {
   uploadProfilePicture,
   uploadNewVideo,
+  uploadNewImage,
 } from "../Controllers/uploadMedia";
 import { authenticateToken } from "../Middleware";
-import { uploadProfile, uploadVideo } from "../Middleware/fileHandling";
+import {
+  uploadImage,
+  uploadProfile,
+  uploadVideo,
+} from "../Middleware/fileHandling";
 
 export default (router: express.Router) => {
   router.post(
@@ -19,5 +24,12 @@ export default (router: express.Router) => {
     authenticateToken,
     uploadVideo.single("Video"),
     uploadNewVideo
+  );
+
+  router.post(
+    "/uploadFile/Image",
+    authenticateToken,
+    uploadImage.single("Image"),
+    uploadNewImage
   );
 };

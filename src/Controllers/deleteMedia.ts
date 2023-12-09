@@ -1,116 +1,190 @@
 import express, { response } from "express";
 import { deleteFile } from "../Helpers";
-import { UserModel, deleteProfilePicture } from "../Model/users";
+import { UserModel, updateProfilePicture } from "../Model/users";
 import { VideoModel } from "../Model/videos";
-import { VideoCommentsModel } from "../Model/videoComments";
-import { getUserById } from "../Model/users";
+import { fileStorage, fileBucket } from "../Helpers/constants";
+import { ImageModel, deleteImage } from "../Model/images";
+import { authorizedUser } from "../Helpers/validateUser";
 
 //---------------------------Delete profile picture--------------------------------
+
 export const removeProfilePicture = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
     const { id } = req.body;
+
     if (!id) {
-      const response = {
+      return res.status(400).json({
         status: 400,
         message: "Invalid request. 'userId' is required.",
+        result: {},
+      });
+    }
+
+    const user = await UserModel.findById(id).select("avatar.imageName").exec();
+
+    if (user.avatar.imageName) {
+      await deleteFileFromGoogleStorage(user.avatar.imageName);
+      await updateProfilePicture(id, "", "");
+
+      return res.status(200).json({
+        status: 200,
+        message: "Avatar removed successfully!",
+        result: {},
+      });
+    } else {
+      return res.status(400).json({
+        status: 400,
+        message: "Profile picture not found.",
+        result: {},
+      });
+    }
+  } catch (error) {
+    console.error("Error removing profile picture:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};
+
+const deleteFileFromGoogleStorage = async (fileName: string) => {
+  const blob = fileBucket.file(fileName);
+  await blob.delete();
+};
+
+//---------------------------Delete a video--------------------------------
+
+export const deleteVideo = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { videoId, creatorId } = req.body;
+
+    if (!videoId || !creatorId) {
+      const response = {
+        message: "Invalid input. Both videoId and creatorId are required.",
         result: {},
       };
       return res.status(400).json(response);
     }
-    const user = await UserModel.findById(id).select("avatar.localPath").exec();
-    if (user.avatar.localPath) {
-      deleteFile(user.avatar.localPath);
-      const profileURL = await deleteProfilePicture(id);
-      if (profileURL) {
-        const response = {
-          status: 200,
-          message: "Avatar removed successfully!",
-          result: {},
-        };
-        return res.status(200).json(response);
-      }
+
+    const isAuthorized = await authorizedUser(creatorId);
+
+    if (isAuthorized) {
       const response = {
-        status: 200,
-        message: "Avatar removed successfully!",
+        message: "You are not authorized to delete this video.",
         result: {},
+      };
+      return res.status(403).json(response);
+    }
+
+    const video = await VideoModel.findById(videoId);
+    if (!video) {
+      const response = {
+        message: "Video not found.",
+        result: {},
+      };
+      return res.status(404).json(response);
+    }
+
+    const videoName = video.fileName;
+    const blob = fileBucket.file(videoName);
+    await blob.delete();
+
+    const deletedVideo = await VideoModel.findOneAndDelete({
+      _id: videoId,
+      creatorId,
+    });
+
+    if (deletedVideo) {
+      const response = {
+        message: "Video deleted successfully.",
+        result: deletedVideo,
       };
       return res.status(200).json(response);
     } else {
       const response = {
-        status: 400,
-        message: "Try again later!",
+        message: "Failed to delete video from the database.",
         result: {},
       };
-      return res.status(400).json(response);
+      return res.status(500).json(response);
     }
-  } catch {
+  } catch (error) {
+    console.error("Error deleting video:", error);
     const response = {
-      status: 500,
-      message: "Internal Server Error",
+      message: "Internal server error.",
       result: {},
     };
     return res.status(500).json(response);
   }
 };
 
-//---------------------------Delete a video--------------------------------
-
-export const removeVideo = async (
+//---------------------------Delete an Image--------------------------------
+export const deleteImages = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const { videoId, creatorId } = req.body;
-    if (!videoId || !creatorId) {
+    const { ImageId, creatorId } = req.body;
+
+    if (!ImageId || !creatorId) {
       const response = {
-        status: 400,
-        message: "Invalid request. 'videoId' & 'creatorId' is required.",
+        message: "Invalid input. Both ImageId and creatorId are required.",
         result: {},
       };
       return res.status(400).json(response);
     }
 
-    const checkCreator = await getUserById(creatorId);
-    if (checkCreator.isContentCreator === false) {
+    const isAuthorized = await authorizedUser(creatorId);
+
+    if (isAuthorized) {
       const response = {
-        message: "You are not authorized to upload a video.",
+        message: "You are not authorized to delete this image.",
         result: {},
       };
-      return res.status(400).json(response);
+      return res.status(403).json(response);
     }
 
-    const videoUrl = await VideoModel.findById(videoId).select("url").exec();
+    const image = await ImageModel.findById(ImageId);
+    if (!image) {
+      const response = {
+        message: "Image not found.",
+        result: {},
+      };
+      return res.status(404).json(response);
+    }
 
-    deleteFile(videoUrl.url);
-    const deleted = VideoModel.deleteOne({
-      _id: videoId,
-      creatorId: creatorId,
+    const imageName = image.fileName;
+    const blob = fileBucket.file(imageName);
+    await blob.delete();
+
+    const deletedImage = await ImageModel.findOneAndDelete({
+      _id: ImageId,
+      creatorId,
     });
 
-    if (videoUrl && (await deleted).deletedCount >= 1) {
-      await VideoCommentsModel.deleteMany({ videoId: videoId });
-
+    if (deletedImage) {
       const response = {
-        status: 200,
-        message: "Video removed successfully!",
-        result: {},
+        message: "Image deleted successfully.",
+        result: deletedImage,
       };
       return res.status(200).json(response);
     } else {
       const response = {
-        status: 400,
-        message: "Try again later!",
+        message: "Failed to delete Image from the database.",
         result: {},
       };
-      return res.status(400).json(response);
+      return res.status(500).json(response);
     }
-  } catch {
+  } catch (error) {
+    console.error("Error deleting Image:", error);
     const response = {
-      status: 500,
-      message: "Internal Server Error",
+      message: "Internal server error.",
       result: {},
     };
     return res.status(500).json(response);

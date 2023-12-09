@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import {
-  addProfilePicture,
+  updateProfilePicture,
   UserModel,
   deleteProfilePicture,
 } from "../Model/users";
@@ -10,67 +10,84 @@ import { addVideo } from "../Model/videos";
 import { getUserById } from "../Model/users";
 import { fileBucket, fileStorage } from "../Helpers/constants";
 import { secretKey } from "../Helpers/secretKeyGnerator";
+import { addImage } from "../Model/images";
+import { authorizedUser } from "../Helpers/validateUser";
 
+// ================================upload Profile Picture==================================
 export const uploadProfilePicture = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { id } = req.body;
 
     if (!id) {
-      const response = {
+      return res.status(400).json({
         status: 400,
         message: "Invalid request. 'userId' is required.",
         result: {},
-      };
-      return res.status(400).json(response);
-    }
-    const user = await UserModel.findById(id).select("avatar.localPath").exec();
-    if (user.avatar.localPath || user.avatar.localPath != "") {
-      deleteFile(user.avatar.localPath);
-      const profileURL = await deleteProfilePicture(id);
+      });
     }
 
-    const imageURL = req.file?.path;
+    const user = await UserModel.findById(id)
+      .select("avatar.imageName avatar.imagePath")
+      .exec();
 
-    if (!imageURL) {
-      const response = {
+    if (user.avatar.imagePath && user.avatar.imagePath !== "") {
+      await deleteProfilePicture(id);
+    }
+
+    const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({
         status: 400,
         message: "No file uploaded or file URL not found.",
         result: {},
-      };
-      return res.status(400).json(response);
+      });
     }
 
-    const upload = await addProfilePicture(id, imageURL);
-    if (upload) {
-      const response = {
-        status: 200,
-        message: "Profile Picture Updated!",
-        result: {},
-      };
-      return res.json(response);
-    } else {
-      deleteFile(imageURL);
-      const response = {
-        status: 400,
-        message: "We couldn't update your picture at the moment!",
-        result: {},
-      };
-      return res.status(400).json(response);
-    }
+    const timestamp = Date.now();
+    const imageName = `${timestamp}_${secretKey}_${imageFile.originalname}`;
+    const blob = fileBucket.file(imageName);
+
+    const blobStream = blob.createWriteStream();
+    const imageURL = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${imageName}`;
+
+    blobStream.on("finish", async () => {
+      try {
+        await updateProfilePicture(id, imageName, imageURL);
+
+        const response = {
+          message: "Image uploaded successfully.",
+          result: {},
+        };
+
+        return res.status(200).json(response);
+      } catch (error) {
+        console.error("Error updating user profile picture:", error);
+        return sendInternalError(res);
+      }
+    });
+
+    blobStream.on("error", (error) => {
+      console.error("Error in blobStream:", error);
+      return sendInternalError(res);
+    });
+
+    blobStream.end(imageFile.buffer);
   } catch (error) {
-    const response = {
-      status: 500,
-      message: "Internal Server Error",
-      result: {},
-    };
-    return res.status(500).json(response);
+    console.error("Error in uploadProfilePicture:", error);
+    return sendInternalError(res);
   }
+};
+
+const sendInternalError = (res: express.Response) => {
+  return res.status(500).json({
+    status: 500,
+    message: "Internal Server Error",
+    result: {},
+  });
 };
 
 // ================================upload Video==================================
@@ -91,9 +108,9 @@ export const uploadNewVideo = async (
       return res.status(400).json(response);
     }
 
-    const checkCreator = await getUserById(creatorId);
+    const isAuthorized = await authorizedUser(creatorId);
 
-    if (!checkCreator || !checkCreator.isContentCreator) {
+    if (isAuthorized) {
       const response = {
         message: "You are not authorized to upload a video.",
         result: {},
@@ -108,8 +125,6 @@ export const uploadNewVideo = async (
     const blobStream = blob.createWriteStream();
 
     const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
-    console.log("Video Name:", videoName);
-    console.log("Video URL:", videoUrl);
 
     blobStream.on("finish", async () => {
       try {
@@ -152,6 +167,93 @@ export const uploadNewVideo = async (
     });
 
     blobStream.end(videoFile.buffer);
+  } catch (error) {
+    const response = {
+      status: 500,
+      message: "Internal Server Error",
+      result: {},
+    };
+
+    return res.status(500).json(response);
+  }
+};
+// ================================upload Image==================================
+
+export const uploadNewImage = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { title, description, creatorId } = req.body;
+    const imageFile = req.file;
+
+    if (!title || !description || !creatorId || !imageFile) {
+      const response = {
+        message: "Failed to upload image. Something is missing.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
+    const isAuthorized = await authorizedUser(creatorId);
+
+    if (isAuthorized) {
+      const response = {
+        message: "You are not authorized to upload a image.",
+        result: {},
+      };
+      return res.status(403).json(response);
+    }
+
+    const timestamp = Date.now();
+    const videoName = `${timestamp}_${secretKey}_${imageFile.originalname}`;
+    const blob = fileBucket.file(videoName);
+
+    const blobStream = blob.createWriteStream();
+
+    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
+
+    blobStream.on("finish", async () => {
+      try {
+        await addImage({
+          title,
+          description,
+          fileName: videoName,
+          url: videoUrl,
+          creatorId,
+          postDate: timestamp,
+        });
+
+        const response = {
+          message: "Image uploaded successfully.",
+          result: {},
+        };
+
+        return res.status(200).json(response);
+      } catch (error) {
+        const response = {
+          status: 500,
+          message: "Internal Server Error",
+          result: {},
+        };
+
+        return res.status(500).json(response);
+      }
+    });
+
+    blobStream.on("error", (error) => {
+      console.error("Error in blobStream:", error);
+
+      const response = {
+        status: 500,
+        message: "Internal Server Error",
+        result: {},
+      };
+
+      return res.status(500).json(response);
+    });
+
+    blobStream.end(imageFile.buffer);
   } catch (error) {
     const response = {
       status: 500,

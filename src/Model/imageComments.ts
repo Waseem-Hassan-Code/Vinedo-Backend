@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-const vidCommentsSchema = new mongoose.Schema({
+const imgCommentsSchema = new mongoose.Schema({
   comment: { type: String, required: true },
-  videoId: {
+  imageId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "videos",
     required: true,
@@ -14,28 +14,28 @@ const vidCommentsSchema = new mongoose.Schema({
   },
 });
 
-export const VideoCommentsModel = mongoose.model(
-  "videoComments",
-  vidCommentsSchema
+export const ImageCommentsModel = mongoose.model(
+  "imageComments",
+  imgCommentsSchema
 );
 
 export const addComment = (values: Record<string, any>) => {
-  return new VideoCommentsModel(values)
+  return new ImageCommentsModel(values)
     .save()
     .then((comment) => comment.toObject());
 };
 
 export const updateComment = async (
-  videoId: string,
+  imageId: string,
   userId: string,
   commentId: string,
   newComment: string
 ) => {
-  const result = await VideoCommentsModel.findOneAndUpdate(
+  const result = await ImageCommentsModel.findOneAndUpdate(
     {
       _id: commentId,
       userId: userId,
-      videoId: videoId,
+      imageId: imageId,
     },
     { $set: { comment: newComment } },
     { new: true }
@@ -44,14 +44,14 @@ export const updateComment = async (
 };
 
 export const deleteComment = async (
-  videoId: string,
+  imageId: string,
   userId: string,
   commentId: string
 ) => {
-  const result = await VideoCommentsModel.findOneAndDelete({
+  const result = await ImageCommentsModel.findOneAndDelete({
     _id: commentId,
     userId: userId,
-    videoId: videoId,
+    imageId: imageId,
   });
   return result;
 };

@@ -31,8 +31,8 @@ export const addVideo = (values: Record<string, any>) => {
   return new VideoModel(values).save().then((video) => video.toObject());
 };
 
-export const deleteVideo = (videoId: string) => {
-  const deleted = VideoModel.findByIdAndDelete(videoId);
+export const deleteVideo = (videoId: string, creatorId: string) => {
+  const deleted = VideoModel.findByIdAndDelete({ _id: videoId, creatorId });
   if (deleted) {
     return "Video deleted!";
   } else {

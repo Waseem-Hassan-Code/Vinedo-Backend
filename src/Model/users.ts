@@ -66,8 +66,8 @@ import mongoose from "mongoose";
 
 const UserShema = new mongoose.Schema({
   avatar: {
-    url: { type: String, default: `https://via.placeholder.com/200x200.png` },
-    localPath: { type: String, default: "" },
+    imageName: { type: String, default: `` },
+    imagePath: { type: String, default: "" },
   },
   name: { type: String, required: true },
   authentication: {
@@ -119,8 +119,17 @@ export const deleteUserById = (id: string) => {
   );
 };
 
-export const addProfilePicture = (id: string, imgPath: string) => {
-  const updateQuery = { $set: { "avatar.localPath": imgPath } };
+export const updateProfilePicture = (
+  id: string,
+  imageName: string,
+  imagePath: string
+) => {
+  const updateQuery = {
+    $set: {
+      "avatar.imageName": imageName,
+      "avatar.imagePath": imagePath,
+    },
+  };
 
   return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
     new: true,
@@ -128,7 +137,9 @@ export const addProfilePicture = (id: string, imgPath: string) => {
 };
 
 export const deleteProfilePicture = (id: string) => {
-  const updateQuery = { $set: { "avatar.localPath": "" } };
+  const updateQuery = {
+    $set: { "avatar.imagePath": "", "avatar.imageName": "" },
+  };
 
   return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
     new: true,

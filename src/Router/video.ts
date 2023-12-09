@@ -1,8 +1,15 @@
 import express from "express";
 import { authenticateToken } from "../Middleware";
-import { getVideo, postComment } from "../Controllers/videos";
+import {
+  delete_A_Comment,
+  getVideo,
+  postComment,
+  update_A_Comment,
+} from "../Controllers/videos";
 
 export default (router: express.Router) => {
   router.get("/video/getVideo", authenticateToken, getVideo);
-  router.post("/video/addComments", authenticateToken, postComment);
+  router.post("/video/postComments", authenticateToken, postComment);
+  router.get("/video/deleteComments", authenticateToken, delete_A_Comment);
+  router.post("/video/updateComments", authenticateToken, update_A_Comment);
 };

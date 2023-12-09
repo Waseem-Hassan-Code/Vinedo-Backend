@@ -115,5 +115,5 @@ export default (router: express.Router) => {
    *       401:
    *         description: Unauthorized - Invalid or expired token
    */
-  router.get("/auth/register/creator", authenticateToken, registerCreator);
+  router.get("/auth/register/creator", registerCreator);
 };

@@ -3,6 +3,7 @@ import authentication from "./authentication";
 import uploadMedia from "./uploadMedia";
 import deleteMedia from "./deleteMedia";
 import video from "./video";
+import images from "./images";
 const router = express.Router();
 
 export default (): express.Router => {
@@ -10,6 +11,7 @@ export default (): express.Router => {
   uploadMedia(router);
   deleteMedia(router);
   video(router);
+  images(router);
 
   return router;
 };

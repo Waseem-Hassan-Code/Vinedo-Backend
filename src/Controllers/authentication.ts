@@ -148,6 +148,16 @@ export const forgetPassword = async (
     return res.status(400).json(response);
   }
 
+  const existingUser = await getUserByEmail(email);
+  if (!existingUser) {
+    const response: ResponseDto = {
+      status: 400,
+      message: "Email address not found!",
+      result: {},
+    };
+    return res.json(response);
+  }
+
   const user = await getUserByEmail(email);
 
   if (!user) {
@@ -182,14 +192,13 @@ export const forgetPassword = async (
   }
 };
 
+//------------------------------------------------------------------------------------------------------
 export const updatePassword = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
     const { email, otp, password, confirmPassword } = req.body;
-
-    //------------------------------------------------------------------------------------------------------
     const currentTime = new Date().getTime();
 
     // const date = new Date(currentTime);
