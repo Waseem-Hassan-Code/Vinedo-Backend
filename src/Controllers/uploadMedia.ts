@@ -8,6 +8,8 @@ import {
 import { deleteFile } from "../Helpers";
 import { addVideo } from "../Model/videos";
 import { getUserById } from "../Model/users";
+import { fileBucket, fileStorage } from "../Helpers/constants";
+import { secretKey } from "../Helpers/secretKeyGnerator";
 
 export const uploadProfilePicture = async (
   req: express.Request,
@@ -71,64 +73,92 @@ export const uploadProfilePicture = async (
   }
 };
 
-// ------------------------------upload Video------------------------------------------------
+// ================================upload Video==================================
+
 export const uploadNewVideo = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
     const { title, description, creatorId } = req.body;
-    if (!title || !description || !creatorId) {
+    const videoFile = req.file;
+
+    if (!title || !description || !creatorId || !videoFile) {
       const response = {
-        message: "Failed to upload video.",
+        message: "Failed to upload video. Something is missing.",
         result: {},
       };
-      return res.sendStatus(400).json(response);
+      return res.status(400).json(response);
     }
 
     const checkCreator = await getUserById(creatorId);
-    if (checkCreator.isContentCreator === false) {
+
+    if (!checkCreator || !checkCreator.isContentCreator) {
       const response = {
         message: "You are not authorized to upload a video.",
         result: {},
       };
-      return res.status(400).json(response);
+      return res.status(403).json(response);
     }
 
-    const videoUrl = req.file?.path;
+    const timestamp = Date.now();
+    const videoName = `${timestamp}_${secretKey}_${videoFile.originalname}`;
+    const blob = fileBucket.file(videoName);
 
-    if (!videoUrl) {
-      const response = {
-        message: "No file uploaded or file URL not found.",
-        result: {},
-      };
-      return res.status(400).json(response);
-    }
-    const video = await addVideo({
-      title,
-      description,
-      url: videoUrl,
-      creatorId,
+    const blobStream = blob.createWriteStream();
+
+    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
+    console.log("Video Name:", videoName);
+    console.log("Video URL:", videoUrl);
+
+    blobStream.on("finish", async () => {
+      try {
+        await addVideo({
+          title,
+          description,
+          fileName: videoName,
+          url: videoUrl,
+          creatorId,
+          postDate: timestamp,
+        });
+
+        const response = {
+          message: "Video uploaded successfully.",
+          result: {},
+        };
+
+        return res.status(200).json(response);
+      } catch (error) {
+        const response = {
+          status: 500,
+          message: "Internal Server Error",
+          result: {},
+        };
+
+        return res.status(500).json(response);
+      }
     });
-    if (video) {
+
+    blobStream.on("error", (error) => {
+      console.error("Error in blobStream:", error);
+
       const response = {
-        message: "Video uploaded sucessfully.",
-        result: { video },
-      };
-      return res.status(200).json(response);
-    } else {
-      const response = {
-        message: "Upload failed.",
+        status: 500,
+        message: "Internal Server Error",
         result: {},
       };
-      return res.status(400).json(response);
-    }
+
+      return res.status(500).json(response);
+    });
+
+    blobStream.end(videoFile.buffer);
   } catch (error) {
     const response = {
       status: 500,
       message: "Internal Server Error",
       result: {},
     };
+
     return res.status(500).json(response);
   }
 };

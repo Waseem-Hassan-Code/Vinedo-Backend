@@ -7,8 +7,8 @@ import compression from "compression";
 import cors from "cors";
 import mongoose from "mongoose";
 import router from "./Router";
-import { Server } from "socket.io";
 import path from "path";
+import swaggerDocs from "./Swagger/swaggerOptions";
 
 const app = express();
 
@@ -26,25 +26,17 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 const httpServer = http.createServer(app);
-const io = new Server(httpServer);
-io.on("connection", (socket) => {
-  console.log("What is socket: ", socket);
-  console.log("Socket is active for connection.");
 
-  socket.on("chat", (payload) => {
-    console.log("What is payload", payload);
-    io.emit("chat", payload);
-  });
-});
-
-httpServer.listen(process.env.PORT || 8080, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}/`);
+const port = process.env.PORT || 8080;
+httpServer.listen(port, () => {
+  console.log(`⚙️  Server is running on http://localhost:${process.env.PORT}/`);
 });
 
 mongoose.Promise = Promise;
 mongoose.connect(process.env.MONGO_URL).then(() => {
-  console.log("Connection with DB established successfully!");
+  console.log("☘️  Mongo: Connection with DB established successfully!");
 });
 mongoose.connection.on("error", (error: Error) => console.log(error));
 
+// swaggerDocs(app, <number>port);
 app.use(process.env.BASE_URL, router());

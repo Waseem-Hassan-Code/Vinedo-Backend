@@ -1,12 +1,70 @@
 import express from "express";
-import { VideoModel, addVideo } from "../Model/videos";
+import { VideoModel, addVideo, getAllVideos } from "../Model/videos";
 import { VideoCommentsModel, addComment } from "../Model/videoComments";
 import { getUserById } from "../Model/users";
+import { fileStorage, fileBucket } from "../Helpers/constants";
+
+export const getAllVideos_Creator = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { creatorId } = req.query;
+
+    if (!creatorId) {
+      const response = {
+        message: "System can not find any user.",
+        result: {},
+      };
+      return res.status(404).json(response);
+    }
+
+    const checkUser = await getUserById(creatorId.toString());
+
+    if (checkUser.isContentCreator === true) {
+      const getVids = await getAllVideos(creatorId.toString());
+
+      if (getVids) {
+        const videoNames = getVids.map((video) => video.fileName);
+
+        const filesPromises = videoNames.map(async (videoName) => {
+          const file = fileBucket.file(videoName);
+
+          return file;
+        });
+
+        const files = await Promise.all(filesPromises);
+
+        const response = {
+          message: "Files fetched successfully!",
+          result: { files },
+        };
+
+        return res.status(200).json(response);
+      } else {
+        const response = {
+          message: "You are not authorized for this operation.",
+          result: {},
+        };
+
+        return res.status(404).json(response);
+      }
+    }
+  } catch (error) {
+    const response = {
+      message: "Internal Server Error",
+      result: { error: error.message },
+    };
+
+    return res.status(500).json(response);
+  }
+};
+
+//=================================================================================================
 
 export const getVideo = async (req: express.Request, res: express.Response) => {
   try {
     const { videoId } = req.query;
-    console.log(videoId);
     const video = await VideoModel.findById(videoId).populate("creatorId");
     console.log(video);
     if (!video) {

@@ -1,21 +1,13 @@
-import express, { Request, Response, NextFunction } from "express";
 import multer, { MulterError } from "multer";
-import path from "path";
+import { CustomRequest } from "../Types/types";
+import { fileBucket, fileStorage } from "../Helpers/constants";
 
-interface CustomRequest extends Request {
-  file: Express.Multer.File;
-}
+const storage = (destination: string) => {
+  const storage = fileStorage;
+  const bucket = fileBucket;
 
-const storage = (destination: string) =>
-  multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, path.resolve(__dirname, "../../", destination));
-    },
-    filename: (req, file, cb) => {
-      console.log(file);
-      cb(null, Date.now() + path.extname(file.originalname));
-    },
-  });
+  return multer.memoryStorage();
+};
 
 const fileFilter = (
   req: CustomRequest,

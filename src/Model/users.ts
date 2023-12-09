@@ -1,5 +1,69 @@
 import mongoose from "mongoose";
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         avatar:
+ *           type: object
+ *           properties:
+ *             url:
+ *               type: string
+ *               default: "https://via.placeholder.com/200x200.png"
+ *             localPath:
+ *               type: string
+ *               default: ""
+ *         name:
+ *           type: string
+ *           description: The name of the user.
+ *           required: true
+ *         authentication:
+ *           type: object
+ *           properties:
+ *             password:
+ *               type: string
+ *               required: true
+ *               description: The password of the user.
+ *             salt:
+ *               type: string
+ *               description: The salt used for password hashing.
+ *             sessionToken:
+ *               type: string
+ *               description: The session token of the user.
+ *         email:
+ *           type: string
+ *           required: true
+ *           description: The email address of the user.
+ *         dateOfBirth:
+ *           type: string
+ *           format: date
+ *           required: true
+ *           description: The date of birth of the user.
+ *         phoneNumber:
+ *           type: string
+ *           required: true
+ *           description: The phone number of the user.
+ *         location:
+ *           type: string
+ *           required: true
+ *           description: The location of the user.
+ *         isDeleted:
+ *           type: boolean
+ *           default: false
+ *           description: Indicates if the user is deleted.
+ *         isContentCreator:
+ *           type: boolean
+ *           default: false
+ *           description: Indicates if the user is a content creator.
+ *         isBlocked:
+ *           type: boolean
+ *           default: false
+ *           description: Indicates if the user is blocked.
+ */
+
 const UserShema = new mongoose.Schema({
   avatar: {
     url: { type: String, default: `https://via.placeholder.com/200x200.png` },

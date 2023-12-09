@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const VideoShema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
+  fileName: { type: String, required: true },
   url: { type: String, required: true },
+  postDate: { type: Date, required: true },
   creatorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
@@ -20,6 +22,10 @@ const VideoShema = new mongoose.Schema({
 });
 
 export const VideoModel = mongoose.model("videos", VideoShema);
+
+export const getAllVideos = (creatorId: string) => {
+  return VideoModel.find({ creatorId }).sort({ postDate: -1 });
+};
 
 export const addVideo = (values: Record<string, any>) => {
   return new VideoModel(values).save().then((video) => video.toObject());
