@@ -10,6 +10,7 @@ const SubscriptionSchema = new mongoose.Schema({
         const user = await mongoose.model("user").findById(creatoId);
         return user && user.isContentCreator === true;
       },
+      message: "The specified user must be a content creator.",
     },
   },
   subscriptionPrice: {

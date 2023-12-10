@@ -20,11 +20,7 @@ const userSubscriptionShema = new mongoose.Schema({
 
   userQuotation: {
     type: Number,
-<<<<<<< HEAD
     require: false,
-=======
-    require: true,
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
   },
 
   isSubscribed: { type: Boolean, default: false },
@@ -37,22 +33,47 @@ export const UserSubscriptionModel = mongoose.model(
   userSubscriptionShema
 );
 
+export const getAcceptedRequest = async (
+  requestId: string,
+  userId: string,
+  creatorId: string,
+  subscriptionId: string
+) => {
+  return await UserSubscriptionModel.findOne({
+    _id: requestId,
+    userId: userId,
+    creatorId: creatorId,
+    subscriptionId: subscriptionId,
+  });
+};
+
+export const updateSubscription = async (
+  userId: string,
+  creatorId: string,
+  subscriptionId: string
+) => {
+  const result = await UserSubscriptionModel.updateOne(
+    { userId, creatorId, subscriptionId },
+    { $set: { isSubscribed: false, isPayable: true, userQuotation: 0 } }
+  );
+  if (result.modifiedCount > 0) {
+    return true;
+  }
+  return false;
+};
+
 export const requestSubscription = (values: Record<string, any>) => {
-<<<<<<< HEAD
   return new UserSubscriptionModel(values)
-=======
-  new UserSubscriptionModel(values)
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
     .save()
     .then((subscription) => subscription.toObject());
 };
 
-export const checkSubscription = (
+export const getSubscriptionDetails = (
   userId: string,
   creatoId: string,
   subscriptionId: string
 ) => {
-  return UserSubscriptionModel.find({
+  return UserSubscriptionModel.findOne({
     userId,
     creatoId,
     subscriptionId,
