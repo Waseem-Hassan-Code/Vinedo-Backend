@@ -1,26 +1,28 @@
 import mongoose from "mongoose";
 
 const SubscriptionSchema = new mongoose.Schema({
-  creatoId: {
+  creatorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
     required: true,
     validate: {
-      validator: async function (creatoId: string) {
-        const user = await mongoose.model("user").findById(creatoId);
+      validator: async function (_id: string) {
+        const user = await mongoose.model("user").findById(_id);
         return user && user.isContentCreator === true;
       },
       message: "The specified user must be a content creator.",
     },
   },
+
   subscriptionPrice: {
     type: Number,
     required: true,
   },
+  payPalEmail: { type: String, required: true },
 });
 
 export const creatorSubscriptionModel = mongoose.model(
-  "creatorSubscription",
+  "creatorSubscriptionDetails",
   SubscriptionSchema
 );
 

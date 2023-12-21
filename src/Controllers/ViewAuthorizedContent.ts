@@ -1,0 +1,141 @@
+import express from "express";
+import {
+  checkUserSubscription,
+  getUserSubscriptions,
+} from "../Model/subscriptions";
+import { VideoModel, getAllVideosPaginated } from "../Model/videos";
+import { fileBucket } from "../Helpers/constants";
+import { getComments } from "../Model/videoComments";
+import { getAllImagesPaginated } from "../Model/images";
+import { getCommentsImg } from "../Model/imageComments";
+
+export const getVideos_User = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const userId = req.params.userId;
+    const creatorId = req.params.creatoId;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
+
+    if (!userId || !creatorId) {
+      return res.status(404).json({
+        message: "User not found.",
+        result: {},
+      });
+    }
+
+    const subscription = await checkUserSubscription(userId, creatorId);
+
+    if (!subscription) {
+      return res.status(404).json({
+        message: "You are not currently subscribed to this creator.",
+        result: {},
+      });
+    } else if (subscription) {
+      const skip = (pageNumber - 1) * pageSizeNumber;
+      const videos = await getAllVideosPaginated(
+        creatorId,
+        skip,
+        <number>pageSize
+      );
+
+      if (videos && videos.length > 0) {
+        for (const video of videos) {
+          const videoPath = video.fileName;
+          const file = fileBucket.file(videoPath);
+          const comments = await getComments(video._id.toString());
+          const readStream = file.createReadStream();
+
+          res.write(`Processing video: ${video.title}\n\nComments:\n`);
+          comments.forEach((comment) => {
+            res.write(`${comment}\n`);
+          });
+
+          readStream.pipe(res, { end: false });
+        }
+        res.end();
+      } else {
+        return res.status(404).json({
+          message: "No videos found for the specified creator.",
+          result: {},
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching videos:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};
+//=======================================================================================================
+
+export const getImages_User = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const userId = req.params.userId;
+    const creatorId = req.params.creatoId;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
+
+    if (!userId || !creatorId) {
+      return res.status(404).json({
+        message: "User not found.",
+        result: {},
+      });
+    }
+
+    const subscription = await checkUserSubscription(userId, creatorId);
+
+    if (!subscription) {
+      return res.status(404).json({
+        message: "You are not currently subscribed to this creator.",
+        result: {},
+      });
+    } else if (subscription) {
+      const skip = (pageNumber - 1) * pageSizeNumber;
+      const images = await getAllImagesPaginated(
+        creatorId,
+        skip,
+        <number>pageSize
+      );
+
+      if (images && images.length > 0) {
+        for (const image of images) {
+          const videoPath = image.fileName;
+          const file = fileBucket.file(videoPath);
+          const comments = await getCommentsImg(image._id.toString());
+          const readStream = file.createReadStream();
+
+          res.write(`Processing Image: ${image.title}\n\nComments:\n`);
+          comments.forEach((comment) => {
+            res.write(`${comment}\n`);
+          });
+
+          readStream.pipe(res, { end: false });
+        }
+        res.end();
+      } else {
+        return res.status(404).json({
+          message: "No videos found for the specified creator.",
+          result: {},
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching videos:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};

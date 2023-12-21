@@ -1,68 +1,78 @@
 import express from "express";
-import { VideoModel, addVideo, getAllVideos } from "../Model/videos";
+import { VideoModel, getAllVideosPaginated } from "../Model/videos";
 import {
   VideoCommentsModel,
   addComment,
   deleteComment,
+  getComments,
   updateComment,
 } from "../Model/videoComments";
-import { getUserById } from "../Model/users";
-import { fileStorage, fileBucket } from "../Helpers/constants";
+import { fileBucket } from "../Helpers/constants";
+import { authorizedUser } from "../Helpers/validateUser";
 
 //=================================================================================================
-export const getAllVideos_Creator = async (
+
+export const getVideos_Creator = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const { creatorId } = req.query;
+    const creatorId = req.params.creatorId;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
 
     if (!creatorId) {
-      const response = {
-        message: "System can not find any user.",
+      return res.status(404).json({
+        message: "Video not found.",
         result: {},
-      };
-      return res.status(404).json(response);
+      });
     }
 
-    const checkUser = await getUserById(creatorId.toString());
+    const isAuthorized = await authorizedUser(creatorId);
 
-    if (checkUser.isContentCreator === true) {
-      const getVids = await getAllVideos(creatorId.toString());
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: "You are not authorized to access this content.",
+        result: {},
+      });
+    }
 
-      if (getVids) {
-        const videoNames = getVids.map((video) => video.fileName);
+    const skip = (pageNumber - 1) * pageSizeNumber;
+    const videos = await getAllVideosPaginated(
+      creatorId,
+      skip,
+      <number>pageSize
+    );
 
-        const filesPromises = videoNames.map(async (videoName) => {
-          const file = fileBucket.file(videoName);
+    if (videos && videos.length > 0) {
+      for (const video of videos) {
+        const videoPath = video.fileName;
+        const file = fileBucket.file(videoPath);
+        const comments = await getComments(video._id.toString());
+        const readStream = file.createReadStream();
 
-          return file;
+        res.write(`Processing video: ${video.title}\n\nComments:\n`);
+        comments.forEach((comment) => {
+          res.write(`${comment}\n`);
         });
 
-        const files = await Promise.all(filesPromises);
-
-        const response = {
-          message: "Files fetched successfully!",
-          result: { files },
-        };
-
-        return res.status(200).json(response);
-      } else {
-        const response = {
-          message: "You are not authorized for this operation.",
-          result: {},
-        };
-
-        return res.status(404).json(response);
+        readStream.pipe(res, { end: false });
       }
+      res.end();
+    } else {
+      return res.status(404).json({
+        message: "No videos found for the specified creator.",
+        result: {},
+      });
     }
   } catch (error) {
-    const response = {
+    return res.status(500).json({
+      status: 500,
       message: "Internal Server Error",
-      result: { error: error.message },
-    };
-
-    return res.status(500).json(response);
+      result: {},
+    });
   }
 };
 
@@ -97,8 +107,6 @@ export const getVideo = async (req: express.Request, res: express.Response) => {
         user: comment.userId,
       })),
     };
-
-    console.log(comments);
 
     const response = {
       message: "Video retrieved.",

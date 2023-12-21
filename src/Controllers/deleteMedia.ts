@@ -75,7 +75,7 @@ export const deleteVideo = async (
 
     const isAuthorized = await authorizedUser(creatorId);
 
-    if (isAuthorized) {
+    if (!isAuthorized) {
       const response = {
         message: "You are not authorized to delete this video.",
         result: {},
@@ -142,7 +142,7 @@ export const deleteImages = async (
 
     const isAuthorized = await authorizedUser(creatorId);
 
-    if (isAuthorized) {
+    if (!isAuthorized) {
       const response = {
         message: "You are not authorized to delete this image.",
         result: {},

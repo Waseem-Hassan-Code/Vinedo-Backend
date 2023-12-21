@@ -4,3 +4,4 @@ src/GoogleCloud/googleKey.json
 
 # Ignore environment variable file
 .env
+node_modules

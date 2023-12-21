@@ -5,58 +5,69 @@ import {
   getCreatorSubscriptionDetails,
   upDateSubscriptionDetails,
 } from "../Model/creatorSubDetails";
-<<<<<<< HEAD
+
 import {
   checkSubscriptionRequest,
   acceptSubscriptionRequest,
   denySubscriptionRequest,
 } from "../Model/subscriptions";
-=======
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
+import { authorizedUser } from "../Helpers/validateUser";
+
+//===================================================================
 
 export const setCreatorSub = async (
   req: express.Request,
   res: express.Response
-) => {
-  const { creatoId, subscriptionPrice } = req.body();
+): Promise<void> => {
   try {
-    if (!creatoId || !subscriptionPrice) {
+    const { creatorId, subscriptionPrice, payPalEmail } = req.body;
+
+    if (!creatorId || !subscriptionPrice || !payPalEmail) {
       const response = {
-        message: "Invalid request. 'creatorId' is required.",
+        message: 'Invalid request. "creatorId" is required.',
         result: {},
       };
-      return res.sendStatus(400).json(response);
+      res.status(400).json(response);
     }
-    const setSubscription = await setCreatorSubscriptionDetails({
-      creatoId,
+
+    const authorized = await authorizedUser(creatorId);
+    if (!authorized) {
+      const response = {
+        message: "Invalid request. You are unauthorized for this request.",
+        result: {},
+      };
+      res.status(400).json(response);
+    }
+
+    const updatedData = await setCreatorSubscriptionDetails({
+      creatorId,
       subscriptionPrice,
+      payPalEmail,
     });
-    if (setSubscription) {
+
+    if (!updatedData) {
       const response = {
-        message: "Data updated!",
-        result: { setSubscription },
+        message: "Data update failed!",
+        result: updatedData,
       };
-      return res.sendStatus(200).json(response);
-    } else {
-      const response = {
-        message: "Data updation failed!",
-        result: { setSubscription },
-      };
-      return res.sendStatus(400).json(response);
+      res.status(400).json(response);
     }
+
+    res.status(200).json({
+      message: "Data updated!",
+      result: updatedData,
+    });
   } catch (error) {
     const response = {
       message: "Internal server error!",
       result: { error },
     };
-    return res.sendStatus(500).json(response);
+    res.status(500).json(response);
   }
 };
-<<<<<<< HEAD
+
 //===============================================================================
-=======
-//----------------------------------------------------------------------
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
+
 export const getCreatorSub = async (
   req: express.Request,
   res: express.Response
@@ -74,7 +85,7 @@ export const getCreatorSub = async (
     if (detail) {
       const response = {
         message: "Creator subscription details!",
-        result: { detail },
+        result: detail,
       };
       return res.sendStatus(200).json(response);
     } else {
@@ -87,16 +98,13 @@ export const getCreatorSub = async (
   } catch (error) {
     const response = {
       message: "Internal server error!",
-      result: { error },
+      result: error,
     };
     return res.sendStatus(500).json(response);
   }
 };
-<<<<<<< HEAD
+
 //===============================================================================
-=======
-//----------------------------------------------------------------------
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb
 
 export const updateCreatorSub = async (
   req: express.Request,
@@ -136,7 +144,6 @@ export const updateCreatorSub = async (
     return res.sendStatus(500).json(response);
   }
 };
-<<<<<<< HEAD
 
 //===============================================================================
 
@@ -269,5 +276,3 @@ export const rejectSubRequest = async (
 };
 
 //===============================================================================
-=======
->>>>>>> e58170b26d45b8b6f417bcbd48fd484f59fa98cb

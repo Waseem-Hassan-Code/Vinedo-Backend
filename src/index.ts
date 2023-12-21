@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import express from "express";
 import http from "http";
 import bodyParser from "body-parser";
@@ -8,7 +7,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import router from "./Router";
 import path from "path";
-import swaggerDocs from "./Swagger/swaggerOptions";
+import { initiatePayment } from "./Helpers/payPayIntegration";
 
 const app = express();
 
@@ -31,9 +30,12 @@ const port = process.env.PORT || 8080;
 httpServer.listen(port, () => {
   console.log(`⚙️  Server is running on http://localhost:${process.env.PORT}/`);
 });
+const creatorId = "657486e3410a225e3ed58a8a";
+const totalAmount = 100;
 
 mongoose.Promise = Promise;
 mongoose.connect(process.env.MONGO_URL).then(() => {
+  // initiatePayment(creatorId, totalAmount);
   console.log("☘️  Mongo: Connection with DB established successfully!");
 });
 mongoose.connection.on("error", (error: Error) => console.log(error));
