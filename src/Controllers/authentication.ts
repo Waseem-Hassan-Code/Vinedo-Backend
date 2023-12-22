@@ -95,22 +95,22 @@ export const register = async (req: express.Request, res: express.Response) => {
       !phoneNumber.trim() ||
       !location.trim()
     ) {
-      const response: ResponseDto = {
-        status: 400,
+      const response = {
         message: "Provide complete information, fill all the fields!",
         result: {},
       };
-      return res.json(response);
+      return res.status(400).json(response); // Sending status code 400 with JSON response
     }
+
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      const response: ResponseDto = {
-        status: 400,
+      const response = {
         message: "User is already registered!",
         result: {},
       };
-      return res.json(response);
+      return res.status(409).json(response); // Sending status code 409 with JSON response
     }
+
     const salt = random();
     const user = await createUser({
       name,
@@ -123,15 +123,16 @@ export const register = async (req: express.Request, res: express.Response) => {
       phoneNumber,
       location,
     });
-    const response: ResponseDto = {
+
+    const response = {
       status: 200,
       message: "User registered successfully!",
       result: user,
     };
-    return res.json(response).end();
+    return res.json(response); // Sending status code 200 with JSON response
   } catch (error) {
     console.log(error);
-    return res.sendStatus(500);
+    return res.sendStatus(500); // Sending status code 500 for server error
   }
 };
 
