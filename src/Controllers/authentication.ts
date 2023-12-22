@@ -279,9 +279,9 @@ export const updatePassword = async (
 ) => {
   try {
     const { email, password, confirmPassword } = req.body;
-    const currentTime = new Date().getTime();
+    // const currentTime = new Date().getTime();
 
-    if (!email || !password || confirmPassword) {
+    if (!email || !password || !confirmPassword) {
       const response = {
         message: "Passwords or Email address is missing.",
         result: {},
