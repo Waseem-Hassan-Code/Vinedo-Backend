@@ -250,7 +250,7 @@ export const verifyOTP = async (
     if (otp === storedOTP.otp) {
       const response = {
         status: 200,
-        message: "Enter a new password",
+        message: "Success",
         result: {},
       };
       return res.json(response);

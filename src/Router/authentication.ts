@@ -99,6 +99,8 @@ export default (router: express.Router) => {
    *       401:
    *         description: Unauthorized - Invalid or expired token
    */
+  router.post("/auth/verifyOTP", verifyOTP);
+
   router.post("/auth/updatePassword", updatePassword);
 
   /**
