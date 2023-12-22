@@ -12,6 +12,7 @@ import {
   register,
   registerCreator,
   updatePassword,
+  verifyOTP,
 } from "../Controllers/authentication";
 import { authenticateToken } from "../Middleware";
 
