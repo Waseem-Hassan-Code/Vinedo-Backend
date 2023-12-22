@@ -98,7 +98,7 @@ export default (router: express.Router) => {
    *       401:
    *         description: Unauthorized - Invalid or expired token
    */
-  router.post("/auth/updatePassword", authenticateToken, updatePassword);
+  router.post("/auth/updatePassword", updatePassword);
 
   /**
    * @openapi
