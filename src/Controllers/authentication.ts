@@ -102,6 +102,20 @@ export const register = async (req: express.Request, res: express.Response) => {
       return res.status(400).json(response); // Sending status code 400 with JSON response
     }
 
+    const verifyEmail = await sendEmail(
+      email,
+      "Vinedo Team",
+      "We have successfully created your account."
+    );
+
+    if (!verifyEmail) {
+      const response = {
+        message: "This email does not exists.",
+        result: {},
+      };
+      return res.status(404).json(response);
+    }
+
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
       const response = {
@@ -196,13 +210,21 @@ export const forgetPassword = async (
 };
 
 //------------------------------------------------------------------------------------------------------
-export const updatePassword = async (
+export const verifyOTP = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const { email, otp, password, confirmPassword } = req.body;
+    const { email, otp } = req.body;
     const currentTime = new Date().getTime();
+
+    if (!email || !otp) {
+      const response = {
+        message: "OTP or Email address is missing.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
 
     // const date = new Date(currentTime);
     // const CurrTime =
@@ -219,51 +241,35 @@ export const updatePassword = async (
 
     if (expirationTime < currentTime) {
       const response = {
-        status: 400,
         message: "OTP Expired!",
         result: {},
       };
-      return res.json(response);
+      return res.status(401).json(response);
     }
 
     const storedOTP = otpStorage.get(email);
 
     if (otp != storedOTP.otp) {
       const response = {
-        status: 400,
         message: "Incorrect OTP",
         result: {},
       };
-      return res.json(response);
+      return res.status(403).json(response);
     }
     if (otp === storedOTP.otp) {
-      if (password != confirmPassword) {
-        const response = {
-          status: 400,
-          message: "Password and confirm password should be same",
-          result: {},
-        };
-        return res.json(response);
-      }
-      const salt = random();
-      const newPassword = authentication(salt, password);
-      const update = updateUserPassword(email, newPassword, salt);
-      const newHahsedPass = await update.exec();
-      if (newHahsedPass) {
-        const response = {
-          status: 200,
-          message: "Password updated successfully!",
-          result: {},
-        };
-        return res.json(response);
-      } else {
-        const response = {
-          status: 400,
-          message: "Failed to update, try again.",
-          result: {},
-        };
-        return res.json(response);
-      }
+      const response = {
+        status: 200,
+        message: "Enter a new password",
+        result: {},
+      };
+      return res.json(response);
+    } else {
+      const response = {
+        status: 400,
+        message: "Failed to update, try again.",
+        result: {},
+      };
+      return res.json(response);
     }
   } catch {
     const response = {
@@ -274,7 +280,50 @@ export const updatePassword = async (
     return res.json(response);
   }
 };
-//=================================================================================
+//=====================================UPDATE-PASSWORD=========================================
+
+export const updatePassword = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+    const currentTime = new Date().getTime();
+
+    if (!email || !password || confirmPassword) {
+      const response = {
+        message: "Passwords or Email address is missing.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+    if (password != confirmPassword) {
+      const response = {
+        message: "Password and Confirm Password are not same.",
+        result: {},
+      };
+      return res.status(401).json(response);
+    }
+    const salt = random();
+    const newPassword = authentication(salt, password);
+    const update = updateUserPassword(email, newPassword, salt);
+    const newHahsedPass = await update.exec();
+    if (newHahsedPass) {
+      const response = {
+        status: 200,
+        message: "Password updated successfully!",
+        result: {},
+      };
+      return res.json(response);
+    }
+  } catch {
+    const response = {
+      message: "Internal server error.",
+      result: {},
+    };
+    return res.status(500).json(response);
+  }
+};
 
 export const registerCreator = async (
   req: express.Request,

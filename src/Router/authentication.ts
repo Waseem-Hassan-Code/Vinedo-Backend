@@ -12,6 +12,7 @@ import {
   register,
   registerCreator,
   updatePassword,
+  verifyOTP,
 } from "../Controllers/authentication";
 import { authenticateToken } from "../Middleware";
 
@@ -98,7 +99,9 @@ export default (router: express.Router) => {
    *       401:
    *         description: Unauthorized - Invalid or expired token
    */
-  router.post("/auth/updatePassword", authenticateToken, updatePassword);
+  router.post("/auth/verifyOTP", verifyOTP);
+
+  router.post("/auth/updatePassword", updatePassword);
 
   /**
    * @openapi

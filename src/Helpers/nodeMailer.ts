@@ -12,7 +12,7 @@ export const sendEmail = (
   to: string,
   subject: string,
   text: string
-): Promise<any> => {
+): Promise<boolean> => {
   const mailOptions = {
     from: "bman88873@gmail.com",
     to,
@@ -20,14 +20,12 @@ export const sendEmail = (
     text,
   };
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error("Error sending email: ", error);
-        reject(error);
+        resolve(false);
       } else {
-        console.log("Email sent: ", info.response);
-        resolve(info);
+        resolve(true);
       }
     });
   });
