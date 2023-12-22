@@ -56,7 +56,10 @@ export const login = async (req: express.Request, res: express.Response) => {
       return res.status(403).json(response);
     }
 
-    const userToken = createToken(req.body);
+    const userClaims = await getUserByEmail(email)
+      .select("_id email isContentCreator phoneNumber location dateOfBirth")
+      .lean();
+    const userToken = createToken(userClaims);
 
     if (userToken) {
       const response = {
