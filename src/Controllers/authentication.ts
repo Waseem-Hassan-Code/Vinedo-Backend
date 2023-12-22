@@ -142,6 +142,7 @@ export const forgetPassword = async (
   res: express.Response
 ) => {
   const email = req.body.email;
+  console.log(email, "email");
 
   if (!email) {
     const response = {
@@ -151,47 +152,37 @@ export const forgetPassword = async (
     return res.status(400).json(response);
   }
 
-  const existingUser = await getUserByEmail(email);
-  if (!existingUser) {
-    const response: ResponseDto = {
-      status: 400,
-      message: "Email address not found!",
-      result: {},
-    };
-    return res.json(response);
-  }
+  try {
+    const existingUser = await getUserByEmail(email);
 
-  const user = await getUserByEmail(email);
-
-  if (!user) {
-    const response = {
-      status: 400,
-      message: "User not found.",
-      result: {},
-    };
-    return res.status(400).json(response);
-  } else {
-    const otp = generateOTP();
-
-    try {
-      await sendEmail(email, "OTP for Password Reset", `Your OTP is: ${otp}`);
-
-      otpStorage.set(email, { otp, expirationTime });
-
+    if (!existingUser) {
       const response = {
-        status: 200,
-        message: "OTP sent successfully.",
-        result: { otp },
-      };
-      return res.status(200).json(response);
-    } catch (error) {
-      const response = {
-        status: 500,
-        message: "Email sending failed.",
+        status: 404, // Change the status code to 404 for "Not Found"
+        message: "Email address not found!",
         result: {},
       };
-      return res.json(response);
+      return res.status(404).json(response);
     }
+
+    const otp = generateOTP();
+    // const expirationTime = /* Set your expiration time for OTP */
+
+    await sendEmail(email, "OTP for Password Reset", `Your OTP is: ${otp}`);
+    otpStorage.set(email, { otp, expirationTime });
+
+    const response = {
+      status: 200,
+      message: "OTP sent successfully.",
+      result: { otp },
+    };
+    return res.status(200).json(response);
+  } catch (error) {
+    const response = {
+      status: 500,
+      message: "Error occurred while processing the request.",
+      result: {},
+    };
+    return res.status(500).json(response);
   }
 };
 
