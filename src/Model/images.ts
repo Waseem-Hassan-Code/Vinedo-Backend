@@ -19,6 +19,17 @@ const ImageShema = new mongoose.Schema({
 
 export const ImageModel = mongoose.model("images", ImageShema);
 
+export const getAllImagesPaginated = async (
+  creatorId: string,
+  skip: number,
+  pageSize: number
+) => {
+  return ImageModel.find({ creatorId: creatorId })
+    .sort({ postDate: -1 })
+    .skip(skip)
+    .limit(pageSize);
+};
+
 export const addImage = (values: Record<string, any>) => {
   return new ImageModel(values).save().then((image) => image.toObject());
 };

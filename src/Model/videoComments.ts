@@ -19,6 +19,10 @@ export const VideoCommentsModel = mongoose.model(
   vidCommentsSchema
 );
 
+export const getComments = async (videoId: string) => {
+  return await VideoCommentsModel.find({ videoId: videoId });
+};
+
 export const addComment = (values: Record<string, any>) => {
   return new VideoCommentsModel(values)
     .save()

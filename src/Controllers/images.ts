@@ -1,15 +1,79 @@
 import express from "express";
-import { VideoModel, addVideo, getAllVideos } from "../Model/videos";
 import {
   ImageCommentsModel,
   addComment,
   deleteComment,
   updateComment,
 } from "../Model/imageComments";
-import { getUserById } from "../Model/users";
-import { fileStorage, fileBucket } from "../Helpers/constants";
+import { authorizedUser } from "../Helpers/validateUser";
+import { getAllImagesPaginated } from "../Model/images";
+import { fileBucket, fileStorage } from "../Helpers/constants";
+import { getComments } from "../Model/videoComments";
+import { likeOrDislikeImage, likesOnImage } from "../Model/ImageLikes";
 
-//=================================================================================================
+//===============================================Get all images========================================
+
+export const getImages_Creator = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const creatorId = req.params.creatorId;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
+
+    if (!creatorId) {
+      return res.status(404).json({
+        message: "Images not found.",
+        result: {},
+      });
+    }
+
+    const isAuthorized = await authorizedUser(creatorId);
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: "You are not authorized to access this content.",
+        result: {},
+      });
+    }
+
+    const skip = (pageNumber - 1) * pageSizeNumber;
+    const images = await getAllImagesPaginated(creatorId, skip, pageSizeNumber);
+
+    if (images && images.length > 0) {
+      for (const image of images) {
+        const imagePath = image.fileName;
+        const comments = await getComments(image._id.toString());
+        const file = fileBucket.file(imagePath);
+
+        const readStream = file.createReadStream();
+
+        res.write(`Processing Image: ${image.title}\n\nComments:\n`);
+        comments.forEach((comment) => {
+          res.write(`${comment}\n`);
+        });
+
+        readStream.pipe(res, { end: false });
+      }
+
+      res.end();
+    } else {
+      return res.status(404).json({
+        message: "No Images found for the specified creator.",
+        result: {},
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};
 
 //=========================================Post a comment==============================================
 
@@ -132,5 +196,86 @@ export const update_A_Comment = async (
       result: { error: error.message },
     };
     return res.status(500).json(response);
+  }
+};
+
+//==============================Like or dislike a image================================
+
+export const LikeDislikeImages = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { imageId, userId } = req.body;
+
+    if (!imageId || !userId) {
+      return res.status(400).json({
+        message:
+          "Cannot like or dislike the post, provide imageId, and userId.",
+        result: {},
+      });
+    }
+
+    const result = await likeOrDislikeImage(imageId, userId);
+
+    if (result) {
+      console.log(`Image liked by ${userId}`);
+      return res.status(200).json({
+        message: "Image liked.",
+        result: { result },
+      });
+    } else {
+      console.log(`Image disliked by ${userId}`);
+      return res.status(200).json({
+        message: "Image disliked.",
+        result: { result },
+      });
+    }
+  } catch (error) {
+    console.error(`Error while processing like/dislike: ${error.message}`);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: { error: error.message },
+    });
+  }
+};
+
+//==============================Likes on image================================
+
+export const LikenOnImg = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { imageId } = req.body;
+
+    if (!imageId) {
+      return res.status(400).json({
+        message: "Cannot counts likes on provide imageId.",
+        result: {},
+      });
+    }
+
+    const result = await likesOnImage(imageId);
+
+    if (result) {
+      console.log(`Image liked by ${imageId}`);
+      return res.status(200).json({
+        message: "Image total likes.",
+        result: { result },
+      });
+    } else {
+      console.log(`Image disliked by ${imageId}`);
+      return res.status(400).json({
+        message: "could not retrived likes.",
+        result: { result },
+      });
+    }
+  } catch (error) {
+    console.error(`Error while processing total likes: ${error.message}`);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: { error: error.message },
+    });
   }
 };

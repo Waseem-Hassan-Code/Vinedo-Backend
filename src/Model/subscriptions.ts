@@ -33,6 +33,36 @@ export const UserSubscriptionModel = mongoose.model(
   userSubscriptionShema
 );
 
+export const subscriptionsCount = async (creatorId: string) => {
+  return await UserSubscriptionModel.countDocuments({
+    creatorId: creatorId,
+    isSubscribed: true,
+    isPayable: false,
+  });
+};
+
+export const checkUserSubscription = async (
+  userId: string,
+  creatorId: string
+) => {
+  return await UserSubscriptionModel.findOne({
+    userId: userId,
+    creatorId: creatorId,
+    isSubscribed: true,
+    isRequested: false,
+    isPayable: false,
+  });
+};
+
+export const getUserSubscriptions = async (userId: string) => {
+  return await UserSubscriptionModel.find({
+    userId: userId,
+    isSubscribed: true,
+    isRequested: false,
+    isPayable: false,
+  });
+};
+
 export const getAcceptedRequest = async (
   requestId: string,
   userId: string,
@@ -44,6 +74,27 @@ export const getAcceptedRequest = async (
     userId: userId,
     creatorId: creatorId,
     subscriptionId: subscriptionId,
+    isRequested: false,
+    isSubscribed: true,
+    isPayable: true,
+  });
+};
+
+export const getAllAcceptedRequest = async (userId: string) => {
+  return await UserSubscriptionModel.find({
+    userId: userId,
+    isRequested: false,
+    isSubscribed: true,
+    isPayable: true,
+  });
+};
+
+export const getAllUserRequests = async (creatorId: string) => {
+  return await UserSubscriptionModel.find({
+    creatorId: creatorId,
+    isRequested: true,
+    isSubscribed: false,
+    isPayable: true,
   });
 };
 

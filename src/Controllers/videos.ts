@@ -1,68 +1,79 @@
 import express from "express";
-import { VideoModel, addVideo, getAllVideos } from "../Model/videos";
+import { VideoModel, getAllVideosPaginated } from "../Model/videos";
 import {
   VideoCommentsModel,
   addComment,
   deleteComment,
+  getComments,
   updateComment,
 } from "../Model/videoComments";
-import { getUserById } from "../Model/users";
-import { fileStorage, fileBucket } from "../Helpers/constants";
+import { fileBucket } from "../Helpers/constants";
+import { authorizedUser } from "../Helpers/validateUser";
+import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 
 //=================================================================================================
-export const getAllVideos_Creator = async (
+
+export const getVideos_Creator = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const { creatorId } = req.query;
+    const creatorId = req.params.creatorId;
+    const { page = 1, pageSize = 10 } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
 
     if (!creatorId) {
-      const response = {
-        message: "System can not find any user.",
+      return res.status(404).json({
+        message: "Video not found.",
         result: {},
-      };
-      return res.status(404).json(response);
+      });
     }
 
-    const checkUser = await getUserById(creatorId.toString());
+    const isAuthorized = await authorizedUser(creatorId);
 
-    if (checkUser.isContentCreator === true) {
-      const getVids = await getAllVideos(creatorId.toString());
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: "You are not authorized to access this content.",
+        result: {},
+      });
+    }
 
-      if (getVids) {
-        const videoNames = getVids.map((video) => video.fileName);
+    const skip = (pageNumber - 1) * pageSizeNumber;
+    const videos = await getAllVideosPaginated(
+      creatorId,
+      skip,
+      <number>pageSize
+    );
 
-        const filesPromises = videoNames.map(async (videoName) => {
-          const file = fileBucket.file(videoName);
+    if (videos && videos.length > 0) {
+      for (const video of videos) {
+        const videoPath = video.fileName;
+        const file = fileBucket.file(videoPath);
+        const comments = await getComments(video._id.toString());
+        const readStream = file.createReadStream();
 
-          return file;
+        res.write(`Processing video: ${video.title}\n\nComments:\n`);
+        comments.forEach((comment) => {
+          res.write(`${comment}\n`);
         });
 
-        const files = await Promise.all(filesPromises);
-
-        const response = {
-          message: "Files fetched successfully!",
-          result: { files },
-        };
-
-        return res.status(200).json(response);
-      } else {
-        const response = {
-          message: "You are not authorized for this operation.",
-          result: {},
-        };
-
-        return res.status(404).json(response);
+        readStream.pipe(res, { end: false });
       }
+      res.end();
+    } else {
+      return res.status(404).json({
+        message: "No videos found for the specified creator.",
+        result: {},
+      });
     }
   } catch (error) {
-    const response = {
+    return res.status(500).json({
+      status: 500,
       message: "Internal Server Error",
-      result: { error: error.message },
-    };
-
-    return res.status(500).json(response);
+      result: {},
+    });
   }
 };
 
@@ -97,8 +108,6 @@ export const getVideo = async (req: express.Request, res: express.Response) => {
         user: comment.userId,
       })),
     };
-
-    console.log(comments);
 
     const response = {
       message: "Video retrieved.",
@@ -237,5 +246,86 @@ export const update_A_Comment = async (
       result: { error: error.message },
     };
     return res.status(500).json(response);
+  }
+};
+
+//==============================Like or dislike a image================================
+
+export const LikeDislikeVideos = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { imageId, userId } = req.body;
+
+    if (!imageId || !userId) {
+      return res.status(400).json({
+        message:
+          "Cannot like or dislike the post, provide videoId, and userId.",
+        result: {},
+      });
+    }
+
+    const result = await likeOrDislikeVideo(imageId, userId);
+
+    if (result) {
+      console.log(`Video liked by ${userId}`);
+      return res.status(200).json({
+        message: "Video liked.",
+        result: { result },
+      });
+    } else {
+      console.log(`Video disliked by ${userId}`);
+      return res.status(200).json({
+        message: "Video disliked.",
+        result: { result },
+      });
+    }
+  } catch (error) {
+    console.error(`Error while processing like/dislike: ${error.message}`);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: { error: error.message },
+    });
+  }
+};
+
+//==============================Likes on image================================
+
+export const LikenOnVid = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { imageId } = req.body;
+
+    if (!imageId) {
+      return res.status(400).json({
+        message: "Cannot counts likes on provide videoId.",
+        result: {},
+      });
+    }
+
+    const result = await likesOnVideo(imageId);
+
+    if (result) {
+      console.log(`Video liked by ${imageId}`);
+      return res.status(200).json({
+        message: "Video total likes.",
+        result: { result },
+      });
+    } else {
+      console.log(`Video disliked by ${imageId}`);
+      return res.status(400).json({
+        message: "could not retrived likes.",
+        result: { result },
+      });
+    }
+  } catch (error) {
+    console.error(`Error while processing total likes: ${error.message}`);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: { error: error.message },
+    });
   }
 };

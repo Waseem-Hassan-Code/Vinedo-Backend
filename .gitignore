@@ -1,6 +1,0 @@
-# Ignore google API key files
-src/GoogleCloud/hopeful-kingdom-404716-5f452a617b13.json
-src/GoogleCloud/googleKey.json
-
-# Ignore environment variable file
-.env

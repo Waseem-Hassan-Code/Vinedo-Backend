@@ -14,7 +14,6 @@ import {
   updatePassword,
 } from "../Controllers/authentication";
 import { authenticateToken } from "../Middleware";
-import { uploadProfile } from "../Middleware/fileHandling";
 
 export default (router: express.Router) => {
   /**

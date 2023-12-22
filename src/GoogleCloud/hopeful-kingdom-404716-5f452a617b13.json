@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "hopeful-kingdom-404716",
+  "private_key_id": "5f452a617b13ee651cf9c822c4714ca6fd976a64",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCUhMpPoiuEZ76e\ncQ/1VHSwiMfl5hVuCyqxv7CS74z907/6Z/BiZKVZjNTSY6uEJ4A867p70Yw2heKV\n6nvXB4t2IqMWIzFX3puKWfFYkSuCdjza93gWPjjzepJ9Kw7zbOhBA7Nz79pphbSB\n5kCgctEDoTBmT3m76RtARBcgB04JqatI+xHRtWr7Q+K3QiIu2pulLTsSzlvrF4HI\nwcrkMXpXsx5YTSU1srs0UMZNqqKdMtims4oCxF5qQS94XEPQOPKq5dHeSP+9MnM7\nrqoJpeXZdiyWbdfH5CFDF6NOw9C63ghETzRLV0AZDp1vIhOjdtwbTVySo3jNRix2\nu2Us+3d1AgMBAAECgf8BowdOooQPHzooTgRoJqGQUIPje5yJ/oM58kd2xNGtjMNQ\n48IUwT4RR7wQuhrFPqo0StKDU/mcMoIfEpHvaC8F3kmSa76WVMJPzS33MH3TaR7C\nlC5+ooxZkFKM/FEScAVoaOIISaWVcdqm3P40xnziqMiyDtK/f22fvo4U+f+iLeXw\nWSrTjDZTNwC6jV29j+y6jeabLAea3hEUGfrILfCcgXUU2lnIYdJwbfskW/ttzswy\npnmlUkMMXfIxBOe5HlEntVuz+DCj83Wj3A32wEKj5dg99URiQn7tzraQ57bzCGRG\nGG4Yp3Db75h+vkmTr9LEC6B5nxDkwuYhG5nQJakCgYEAzrCHEgpoZZD2OJk7aKIn\nvsJ38f97F8Ceu0a+eoyql8cEcLrs6OT0d/8QXz3AFft6bf32dvzhETOrcc4GddPX\nPVfwa/NWowlH+tZVCX2VcU+7dJU8K1EFE7tka9FT8VqDSyc+R4NEZZJccCU+QjJr\nFjP/PvKZwsHL4wxbPbuwtpkCgYEAt/OBDRg/zOjR8AwRjspJI7QBBquBRPY71SG9\nOoNsRo8jlYE5BeDiH5MTy3+eePWW5UkBoKosfK/AYN4ZL+bMPoe9GbNJ15brHx5E\nukl0A0RKq1Covgy8mzHaLEiT+Yq27xFFt70zIJ7Wrq/+CKP+JO/54W+XzpzEMu6f\nhh05vT0CgYBPbzKJ8WwL1Ll8KQ/W97L0skJsw/Ynu8SFTvv3l0YczMTdGknge9Wk\npGdDYzUGfb6gtSDau/c3qDb0pux+riqjjb99jWi3geKi+Wp3Gker46u0c4JLV3jv\nC27drPZo5JNe97cMvtszehuCkh2qTTwwrU0kgRIs8lQMb3xFbnPMyQKBgCyeC3c5\non/5GLK4uql/ty3Jw1Xy02/+qZSQkm1W4zRaE693oHUkjrRJ4EtDsRR1vRvwEUz+\n+btkhaz5MfLEcFXaZquNKSP5nx31IYZtuo3wSowzDDrMrBKYjOqg0AN++dASyG5A\nnd4TqM7GMT+3RzV+X4Wmo5OhwpT3/AlznUWhAoGBAL7V1RYv3RAf5DWbTH1Mj+Dd\nzUUbm9yoiF2PjxZyqYK4onQbwkhHuTGbwOHIqV955Hw2iqKrD8H3SU3WzVnMsIch\nyRSy/E76dOKZcQ1UbEQDQOvPpBqmcMbVe5hJg2JVD0n1ei8v23SsOuCI5irviyiU\ncDNfuQzASSIwLXX6TK3M\n-----END PRIVATE KEY-----\n",
+  "client_email": "new-vinedeo-storage-bucket@hopeful-kingdom-404716.iam.gserviceaccount.com",
+  "client_id": "112290983792380178600",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/new-vinedeo-storage-bucket%40hopeful-kingdom-404716.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

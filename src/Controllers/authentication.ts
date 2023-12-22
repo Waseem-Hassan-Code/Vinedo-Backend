@@ -141,7 +141,6 @@ export const forgetPassword = async (
 
   if (!email) {
     const response = {
-      status: 400,
       message: "Email is required.",
       result: {},
     };

@@ -52,25 +52,28 @@ export const customSubscribed = async (
     creatorId,
     subscriptionId
   );
-  const checkCurrentSubscription = await checkExistingSubscription(
-    userId,
-    creatorId,
-    subscriptionId
-  );
+  if (requestStatus) {
+    const checkCurrentSubscription = await checkExistingSubscription(
+      userId,
+      creatorId,
+      subscriptionId
+    );
 
-  switch (checkCurrentSubscription) {
-    case alreadySubscribed:
-      return false;
-    case notSubscribed:
-      if (requestStatus.userQuotation) {
-        //Integrate Paypal here
-        if (await newSubscription(userId, creatorId, subscriptionId)) {
-          return true;
+    switch (checkCurrentSubscription) {
+      case alreadySubscribed:
+        return false;
+      case notSubscribed:
+        if (requestStatus.userQuotation) {
+          //Integrate Paypal here
+          if (await newSubscription(userId, creatorId, subscriptionId)) {
+            return true;
+          }
         }
-      }
-    default:
-      return false;
+      default:
+        return false;
+    }
   }
+  return false;
 };
 
 //===============================================================================================

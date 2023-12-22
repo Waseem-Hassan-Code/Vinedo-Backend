@@ -23,8 +23,15 @@ const VideoShema = new mongoose.Schema({
 
 export const VideoModel = mongoose.model("videos", VideoShema);
 
-export const getAllVideos = (creatorId: string) => {
-  return VideoModel.find({ creatorId }).sort({ postDate: -1 });
+export const getAllVideosPaginated = async (
+  creatorId: string,
+  skip: number,
+  pageSize: number
+) => {
+  return VideoModel.find({ creatorId: creatorId })
+    .sort({ postDate: -1 })
+    .skip(skip)
+    .limit(pageSize);
 };
 
 export const addVideo = (values: Record<string, any>) => {

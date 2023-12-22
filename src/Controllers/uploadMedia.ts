@@ -48,7 +48,10 @@ export const uploadProfilePicture = async (
     }
 
     const timestamp = Date.now();
-    const imageName = `${timestamp}_${secretKey}_${imageFile.originalname}`;
+    const imageName = `${timestamp}_${secretKey}_${imageFile.originalname.replace(
+      /\s/g,
+      ""
+    )}`;
     const blob = fileBucket.file(imageName);
 
     const blobStream = blob.createWriteStream();
@@ -110,7 +113,7 @@ export const uploadNewVideo = async (
 
     const isAuthorized = await authorizedUser(creatorId);
 
-    if (isAuthorized) {
+    if (!isAuthorized) {
       const response = {
         message: "You are not authorized to upload a video.",
         result: {},
@@ -119,7 +122,10 @@ export const uploadNewVideo = async (
     }
 
     const timestamp = Date.now();
-    const videoName = `${timestamp}_${secretKey}_${videoFile.originalname}`;
+    const videoName = `${timestamp}_${secretKey}_${videoFile.originalname.replace(
+      /\s/g,
+      ""
+    )}`;
     const blob = fileBucket.file(videoName);
 
     const blobStream = blob.createWriteStream();
@@ -197,7 +203,7 @@ export const uploadNewImage = async (
 
     const isAuthorized = await authorizedUser(creatorId);
 
-    if (isAuthorized) {
+    if (!isAuthorized) {
       const response = {
         message: "You are not authorized to upload a image.",
         result: {},
@@ -206,19 +212,22 @@ export const uploadNewImage = async (
     }
 
     const timestamp = Date.now();
-    const videoName = `${timestamp}_${secretKey}_${imageFile.originalname}`;
-    const blob = fileBucket.file(videoName);
+    const imageName = `${timestamp}_${secretKey}_${imageFile.originalname.replace(
+      /\s/g,
+      ""
+    )}`;
+    const blob = fileBucket.file(imageName);
 
     const blobStream = blob.createWriteStream();
 
-    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
+    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${imageName}`;
 
     blobStream.on("finish", async () => {
       try {
         await addImage({
           title,
           description,
-          fileName: videoName,
+          fileName: imageName,
           url: videoUrl,
           creatorId,
           postDate: timestamp,

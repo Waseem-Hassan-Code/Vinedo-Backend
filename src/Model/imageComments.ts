@@ -19,6 +19,10 @@ export const ImageCommentsModel = mongoose.model(
   imgCommentsSchema
 );
 
+export const getCommentsImg = async (imageId: string) => {
+  return await ImageCommentsModel.find({ imageId: imageId });
+};
+
 export const addComment = (values: Record<string, any>) => {
   return new ImageCommentsModel(values)
     .save()

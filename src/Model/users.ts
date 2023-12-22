@@ -1,3 +1,4 @@
+import { name } from "ejs";
 import mongoose from "mongoose";
 
 /**
@@ -86,6 +87,22 @@ const UserShema = new mongoose.Schema({
 
 export const UserModel = mongoose.model("user", UserShema);
 
+export const findCreator = async (
+  creatorName: string,
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const skip = (page - 1) * pageSize;
+
+  return await UserModel.find({
+    name: new RegExp(creatorName, "i"),
+    isContentCreator: true,
+  })
+    .skip(skip)
+    .limit(pageSize)
+    .select("_id name");
+};
+
 export const updateUserPassword = (
   email: String,
   Password: String,
@@ -107,6 +124,18 @@ export const getUserBySessionToken = (sessionToken: string) =>
   UserModel.findOne({ "authentication.sessionToken": sessionToken });
 
 export const getUserById = (id: string) => UserModel.findById(id);
+
+export const getCreatorById = async (id: string) => {
+  try {
+    const user = await UserModel.findById(id).where({ isContentCreator: true });
+    if (!user) {
+      return null;
+    }
+    return user;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const createUser = (values: Record<string, any>) =>
   new UserModel(values).save().then((user) => user.toObject());
