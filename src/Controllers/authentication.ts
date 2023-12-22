@@ -105,7 +105,7 @@ export const register = async (req: express.Request, res: express.Response) => {
     const verifyEmail = await sendEmail(
       email,
       "Vinedo Team",
-      "We have successfully created your account."
+      "Thank you for joining us. We're excited to have you on board. Feel free to explore and make the most of our app features."
     );
 
     if (!verifyEmail) {
@@ -187,8 +187,14 @@ export const forgetPassword = async (
   } else {
     const otp = generateOTP();
 
+    const message = `We're pleased to inform you that a 6-digit One-Time Password (OTP) 
+    has been successfully generated and sent to your registered email address.
+     This OTP ${otp} is an additional layer of security to ensure the protection of your account.`;
+
     try {
-      await sendEmail(email, "OTP for Password Reset", `Your OTP is: ${otp}`);
+      await sendEmail(email, "OTP for Password Reset", message);
+
+      const expirationTime = new Date().getTime() + 5 * 60 * 1000;
 
       otpStorage.set(email, { otp, expirationTime });
 
@@ -239,7 +245,8 @@ export const verifyOTP = async (
     // console.log("Current Time:", CurrTime);
     // console.log("Expiration Time:", expiTime);
 
-    if (expirationTime < currentTime) {
+    const storedOtp = otpStorage.get(email);
+    if (!storedOtp || storedOtp.expirationTime < currentTime) {
       const response = {
         message: "OTP Expired!",
         result: {},
@@ -288,7 +295,6 @@ export const updatePassword = async (
 ) => {
   try {
     const { email, password, confirmPassword } = req.body;
-    const currentTime = new Date().getTime();
 
     if (!email || !password || confirmPassword) {
       const response = {

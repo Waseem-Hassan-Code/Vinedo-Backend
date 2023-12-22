@@ -32,4 +32,4 @@ export const deleteFile = (imageURL: string) => {
 export const otpStorage: Map<number, { otp: string; expirationTime: number }> =
   new Map();
 
-export var expirationTime = new Date().getTime() + 5 * 60 * 1000;
+export const expirationTime = new Date().getTime() + 5 * 60 * 1000;
