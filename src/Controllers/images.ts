@@ -9,10 +9,7 @@ import { authorizedUser } from "../Helpers/validateUser";
 import { getAllImagesPaginated } from "../Model/images";
 import { fileBucket, fileStorage } from "../Helpers/constants";
 import { getComments } from "../Model/videoComments";
-<<<<<<< HEAD
 import { likeOrDislikeImage, likesOnImage } from "../Model/ImageLikes";
-=======
->>>>>>> bce77626f5c6e439895d81414c912951e70ca701
 
 //===============================================Get all images========================================
 
