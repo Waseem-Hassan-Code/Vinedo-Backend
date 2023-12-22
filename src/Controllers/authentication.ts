@@ -24,7 +24,6 @@ export const login = async (req: express.Request, res: express.Response) => {
 
     if (!email.trim() || !password.trim()) {
       const response = {
-        status: 400,
         message: "Provide email and password.",
         result: {},
       };
@@ -37,7 +36,6 @@ export const login = async (req: express.Request, res: express.Response) => {
 
     if (!user) {
       const response = {
-        status: 400,
         message: "User not found.",
         result: {},
       };
@@ -70,7 +68,6 @@ export const login = async (req: express.Request, res: express.Response) => {
       return res.status(200).json(response);
     } else {
       const response = {
-        status: 500,
         message: "Cannot fulfill the request right now.",
         result: {},
       };
@@ -265,26 +262,23 @@ export const verifyOTP = async (
     }
     if (otp === storedOTP.otp) {
       const response = {
-        status: 200,
         message: "Enter a new password",
         result: {},
       };
-      return res.json(response);
+      return res.status(200).json(response);
     } else {
       const response = {
-        status: 400,
         message: "Failed to update, try again.",
         result: {},
       };
-      return res.json(response);
+      return res.status(400).json(response);
     }
   } catch {
     const response = {
-      status: 500,
       message: "Internal server error",
       result: {},
     };
-    return res.json(response);
+    return res.status(500).json(response);
   }
 };
 //=====================================UPDATE-PASSWORD=========================================
