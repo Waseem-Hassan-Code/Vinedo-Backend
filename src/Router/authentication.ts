@@ -12,6 +12,7 @@ import {
   register,
   registerCreator,
   updatePassword,
+  userPersonalInfo,
   verifyOTP,
 } from "../Controllers/authentication";
 import { authenticateToken } from "../Middleware";
@@ -102,6 +103,8 @@ export default (router: express.Router) => {
   router.post("/auth/verifyOTP", verifyOTP);
 
   router.post("/auth/updatePassword", updatePassword);
+
+  router.post("/auth/updatePassword", authenticateToken, userPersonalInfo);
 
   /**
    * @openapi

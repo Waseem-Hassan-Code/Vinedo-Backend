@@ -8,6 +8,7 @@ import {
 import {
   createUser,
   getUserByEmail,
+  updateUserInfo,
   updateUserPassword,
   UserModel,
 } from "../Model/users";
@@ -56,7 +57,7 @@ export const login = async (req: express.Request, res: express.Response) => {
 
     const userClaims = await getUserByEmail(email)
       .select(
-        "_id email name isContentCreator phoneNumber location dateOfBirth"
+        "_id email name isContentCreator phoneNumber location dateOfBirth bio createdAt"
       )
       .lean();
     const userToken = createToken(userClaims);
@@ -327,6 +328,47 @@ export const updatePassword = async (
   }
 };
 
+//=====================================UPDATE-PERSONAL INFO=========================================
+
+export const userPersonalInfo = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { userId, name, location, bio } = req.body;
+
+    if (!userId) {
+      const response = {
+        message: "UserId is required.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
+    const updateInfo = await updateUserInfo(userId, name, location, bio);
+    if (updateInfo) {
+      const response = {
+        message: "User Info Updated.",
+        result: {},
+      };
+      return res.status(200).json(response);
+    } else {
+      const response = {
+        message: "Unable to update at the moment.",
+        result: {},
+      };
+      return res.status(401).json(response);
+    }
+  } catch {
+    const response = {
+      message: "Internal server error.",
+      result: {},
+    };
+    return res.status(500).json(response);
+  }
+};
+
+//=====================================UPDATE-PERSONAL INFO=========================================
 export const registerCreator = async (
   req: express.Request,
   res: express.Response

@@ -83,9 +83,30 @@ const UserShema = new mongoose.Schema({
   isDeleted: { type: Boolean, default: false },
   isContentCreator: { type: Boolean, default: false },
   isBlocked: { type: Boolean, default: false },
+  bio: { type: String, default: "Hi, I am using vinedo." },
+  createdAt: { type: Date, default: Date.now },
 });
-
 export const UserModel = mongoose.model("user", UserShema);
+
+export const updateUserInfo = async (
+  userId: string,
+  name: string,
+  location: string,
+  bio: string
+) => {
+  try {
+    const result = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { name, location, bio },
+      { new: true }
+    );
+    return true;
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update user information");
+  }
+  return false;
+};
 
 export const findCreator = async (
   creatorName: string,
