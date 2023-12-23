@@ -54,6 +54,7 @@ export const getImages_Creator = async (
         const buffer = await streamToBuffer(readStream);
 
         return {
+          id: image._id,
           title: image.title,
           description: image.description,
           comments,

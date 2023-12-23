@@ -54,6 +54,7 @@ export const getVideos_Creator = async (
         const buffer = await streamToBuffer(readStream);
 
         return {
+          id: video._id,
           title: video.title,
           comments,
           videoData: buffer.toString("base64"),
