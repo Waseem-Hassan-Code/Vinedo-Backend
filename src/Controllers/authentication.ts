@@ -55,7 +55,9 @@ export const login = async (req: express.Request, res: express.Response) => {
     }
 
     const userClaims = await getUserByEmail(email)
-      .select("_id email isContentCreator phoneNumber location dateOfBirth")
+      .select(
+        "_id email name isContentCreator phoneNumber location dateOfBirth"
+      )
       .lean();
     const userToken = createToken(userClaims);
 
