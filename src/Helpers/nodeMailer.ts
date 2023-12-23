@@ -27,12 +27,9 @@ export const sendEmail = (
         console.error("Error sending email: ", error);
         resolve(false);
       } else {
-        console.log("Email sent: ", info.response);
-
         if (info.response.includes("OK") || info.response.includes("queued")) {
           resolve(true);
         } else {
-          console.error("Email delivery unsuccessful.");
           resolve(false);
         }
       }

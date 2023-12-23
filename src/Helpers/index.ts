@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import fs from "fs";
-const SECRET = "THIS-IS-SECRET";
+const SECRET = "THIS-IS-SECRETHEXADECIMAL*^^%!42dlaaflJLK";
 
 export const random = () => crypto.randomBytes(128).toString("base64");
 export const authentication = (salt: string, password: string) => {
@@ -24,7 +24,6 @@ export const deleteFile = (imageURL: string) => {
     if (err) {
       console.error(`Error deleting file: ${err.message}`);
     } else {
-      console.log("File deleted successfully");
     }
   });
 };
