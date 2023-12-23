@@ -63,7 +63,7 @@ export const login = async (req: express.Request, res: express.Response) => {
       const response = {
         status: 200,
         message: "User login success!",
-        result: userToken,
+        userToken: userToken,
       };
       return res.status(200).json(response);
     } else {
