@@ -9,13 +9,13 @@ import { setCreatorSub } from "../Controllers/handleSubscriptionDetailss";
 
 export default (router: express.Router) => {
   router.post(
-    "/content/getVideos/:userId/:creatoId",
+    "/content/getVideos",
     authenticateToken,
     isValidUser,
     getVideos_User
   );
   router.post(
-    "/content/getImages/:userId/:creatoId",
+    "/content/getImages",
     authenticateToken,
     isValidUser,
     getImages_User

@@ -10,6 +10,7 @@ import { getAllImagesPaginated } from "../Model/images";
 import { fileBucket, fileStorage } from "../Helpers/constants";
 import { getComments } from "../Model/videoComments";
 import { likeOrDislikeImage, likesOnImage } from "../Model/ImageLikes";
+import { streamToBuffer } from "../Helpers";
 
 //===============================================Get all images========================================
 
@@ -27,7 +28,7 @@ export const getImages_Creator = async (
     if (!creatorId) {
       return res.status(404).json({
         message: "Images not found.",
-        result: {},
+        result: [],
       });
     }
 
@@ -36,41 +37,40 @@ export const getImages_Creator = async (
     if (!isAuthorized) {
       return res.status(403).json({
         message: "You are not authorized to access this content.",
-        result: {},
+        result: [],
       });
     }
 
     const skip = (pageNumber - 1) * pageSizeNumber;
     const images = await getAllImagesPaginated(creatorId, skip, pageSizeNumber);
 
-    if (images && images.length > 0) {
-      for (const image of images) {
+    const formattedImages = await Promise.all(
+      images.map(async (image) => {
         const imagePath = image.fileName;
         const comments = await getComments(image._id.toString());
         const file = fileBucket.file(imagePath);
-
         const readStream = file.createReadStream();
 
-        res.write(`Processing Image: ${image.title}\n\nComments:\n`);
-        comments.forEach((comment) => {
-          res.write(`${comment}\n`);
-        });
+        const buffer = await streamToBuffer(readStream);
 
-        readStream.pipe(res, { end: false });
-      }
+        return {
+          title: image.title,
+          description: image.description,
+          comments,
+          imageData: buffer.toString("base64"),
+        };
+      })
+    );
 
-      res.end();
-    } else {
-      return res.status(404).json({
-        message: "No Images found for the specified creator.",
-        result: {},
-      });
-    }
+    return res.status(200).json({
+      message: "Images retrieved successfully.",
+      result: formattedImages,
+    });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      result: {},
+      result: [],
     });
   }
 };

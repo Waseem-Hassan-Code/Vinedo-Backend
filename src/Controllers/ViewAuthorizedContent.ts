@@ -8,15 +8,14 @@ import { fileBucket } from "../Helpers/constants";
 import { getComments } from "../Model/videoComments";
 import { getAllImagesPaginated } from "../Model/images";
 import { getCommentsImg } from "../Model/imageComments";
+import { streamToBuffer } from "../Helpers";
 
 export const getVideos_User = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const userId = req.params.userId;
-    const creatorId = req.params.creatoId;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { userId, creatorId, page = 1, pageSize = 10 } = req.body;
 
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);
@@ -24,7 +23,7 @@ export const getVideos_User = async (
     if (!userId || !creatorId) {
       return res.status(404).json({
         message: "User not found.",
-        result: {},
+        result: [],
       });
     }
 
@@ -33,46 +32,47 @@ export const getVideos_User = async (
     if (!subscription) {
       return res.status(404).json({
         message: "You are not currently subscribed to this creator.",
-        result: {},
+        result: [],
       });
     } else if (subscription) {
       const skip = (pageNumber - 1) * pageSizeNumber;
       const videos = await getAllVideosPaginated(
         creatorId,
         skip,
-        <number>pageSize
+        pageSizeNumber
       );
 
-      if (videos && videos.length > 0) {
-        for (const video of videos) {
+      const formattedVideos = await Promise.all(
+        videos.map(async (video) => {
           const videoPath = video.fileName;
           const file = fileBucket.file(videoPath);
           const comments = await getComments(video._id.toString());
           const readStream = file.createReadStream();
 
-          res.write(`Processing video: ${video.title}\n\nComments:\n`);
-          comments.forEach((comment) => {
-            res.write(`${comment}\n`);
-          });
+          const buffer = await streamToBuffer(readStream);
 
-          readStream.pipe(res, { end: false });
-        }
-        res.end();
-      } else {
-        return res.status(404).json({
-          message: "No videos found for the specified creator.",
-          result: {},
-        });
-      }
+          return {
+            title: video.title,
+            comments,
+            videoData: buffer.toString("base64"),
+          };
+        })
+      );
+
+      return res.status(200).json({
+        message: "Videos retrieved successfully.",
+        result: formattedVideos,
+      });
     }
   } catch (error) {
     console.error("Error fetching videos:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      result: {},
+      result: [],
     });
   }
 };
+
 //=======================================================================================================
 
 export const getImages_User = async (
@@ -80,9 +80,7 @@ export const getImages_User = async (
   res: express.Response
 ) => {
   try {
-    const userId = req.params.userId;
-    const creatorId = req.params.creatoId;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { userId, creatorId, page = 1, pageSize = 10 } = req.body;
 
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);

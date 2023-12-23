@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import fs from "fs";
+import { Stream } from "stream";
+
 const SECRET = "THIS-IS-SECRETHEXADECIMAL*^^%!42dlaaflJLK";
 
 export const random = () => crypto.randomBytes(128).toString("base64");
@@ -32,3 +34,12 @@ export const otpStorage: Map<number, { otp: string; expirationTime: number }> =
   new Map();
 
 export const expirationTime = new Date().getTime() + 5 * 60 * 1000;
+
+export var streamToBuffer = (stream: Stream): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
+  });
+};
