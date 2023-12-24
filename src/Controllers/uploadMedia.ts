@@ -5,15 +5,17 @@ import {
   UserModel,
   deleteProfilePicture,
 } from "../Model/users";
-import { deleteFile } from "../Helpers";
 import { addVideo } from "../Model/videos";
-import { getUserById } from "../Model/users";
 import { fileBucket, fileStorage } from "../Helpers/constants";
 import { secretKey } from "../Helpers/secretKeyGnerator";
 import { addImage } from "../Model/images";
 import { authorizedUser } from "../Helpers/validateUser";
+import fs from "fs";
 //import { processVideo } from "../Helpers";
-const ffmpeg = require("ffmpeg-stream");
+import path from "path";
+
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+var ffmpeg = require("fluent-ffmpeg");
 
 // ================================upload Profile Picture==================================
 export const uploadProfilePicture = async (
@@ -105,7 +107,13 @@ export const uploadNewVideo = async (
     const { title, description, creatorId } = req.body;
     const videoFile = req.file;
 
-    if (!title || !description || !creatorId || !videoFile) {
+    if (
+      !title ||
+      !description ||
+      !creatorId ||
+      !videoFile ||
+      !videoFile.originalname
+    ) {
       const response = {
         message: "Failed to upload video. Something is missing.",
         result: {},
@@ -114,7 +122,6 @@ export const uploadNewVideo = async (
     }
 
     const isAuthorized = await authorizedUser(creatorId);
-
     if (!isAuthorized) {
       const response = {
         message: "You are not authorized to upload a video.",
@@ -128,84 +135,116 @@ export const uploadNewVideo = async (
       /\s/g,
       ""
     )}`;
-    const thumbnailName = `${timestamp}_${secretKey}_thumbnail.png`;
-    const blobVideo = fileBucket.file(videoName);
-    // const blobThumbnail = fileBucket.file(thumbnailName);
+    const tempFilePath = path.join(__dirname, "..", "Temp", videoName);
 
+    const thumbnailName = `${videoName.replace(/\s/g, "")}_thumbnail.png`;
+
+    const tempScreenShotPath = path.join(
+      __dirname,
+      "..",
+      "Temp",
+      thumbnailName
+    );
+
+    if (!fs.existsSync(path.dirname(tempFilePath))) {
+      fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
+    }
+
+    fs.writeFileSync(tempFilePath, videoFile.buffer);
+
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    new ffmpeg(tempFilePath).takeScreenshots(
+      {
+        filename: "Pic" + Date.now(),
+        count: 1,
+        timemarks: ["6"],
+      },
+      tempScreenShotPath
+    );
+
+    const blobVideo = fileBucket.file(videoName);
     const blobStreamVideo = blobVideo.createWriteStream();
-    //  const blobStreamThumbnail = blobThumbnail.createWriteStream();
+
+    const blobStreamThumbnail = fileBucket
+      .file(thumbnailName)
+      .createWriteStream();
 
     const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
     const thumbnailUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${thumbnailName}`;
 
     blobStreamVideo.on("finish", async () => {
       try {
-        await addVideo({
-          title,
-          description,
-          fileName: videoName,
-          url: videoUrl,
-          thumbnailName,
-          thumbnailUrl,
-          postDate: timestamp,
-          creatorId,
+        fs.unlinkSync(tempFilePath);
+        blobStreamThumbnail.on("finish", async () => {
+          try {
+            await addVideo({
+              title,
+              description,
+              fileName: videoName,
+              url: videoUrl,
+              thumbnailName,
+              thumbnailUrl,
+              postDate: timestamp,
+              creatorId,
+            });
+
+            const response = {
+              message: "Video uploaded successfully.",
+              result: {},
+            };
+            return res.status(200).json(response);
+          } catch (error) {
+            console.error("Error in thumbnail upload:", error);
+            return res.status(500).json({
+              status: 500,
+              message: "Internal Server Error",
+              result: {},
+            });
+          }
         });
 
-        const response = {
-          message: "Video uploaded successfully.",
-          result: {},
-        };
+        blobStreamThumbnail.on("error", (error) => {
+          console.error("Error in blobStreamThumbnail:", error);
+          return res.status(500).json({
+            status: 500,
+            message: "Internal Server Error",
+            result: {},
+          });
+        });
 
-        return res.status(200).json(response);
+        blobStreamThumbnail.end(() => {
+          fs.rmdir(thumbnailName, { recursive: true }, (error) => {
+            if (error) {
+              console.error("Error deleting folder:", error);
+            } else {
+              console.log("Folder deleted successfully.");
+            }
+          });
+        });
       } catch (error) {
         console.error("Error in video upload:", error);
-
-        const response = {
+        return res.status(500).json({
           status: 500,
           message: "Internal Server Error",
           result: {},
-        };
-
-        return res.status(500).json(response);
+        });
       }
     });
 
     blobStreamVideo.on("error", (error) => {
       console.error("Error in blobStreamVideo:", error);
-
-      const response = {
-        status: 500,
-        message: "Internal Server Error",
-        result: {},
-      };
-
-      return res.status(500).json(response);
+      return res
+        .status(500)
+        .json({ status: 500, message: "Internal Server Error", result: {} });
     });
 
-    // blobStreamThumbnail.on("error", (error) => {
-    //   console.error("Error in blobStreamThumbnail:", error);
-
-    //   const response = {
-    //     status: 500,
-    //     message: "Internal Server Error",
-    //     result: {},
-    //   };
-
-    //   return res.status(500).json(response);
-    // });
-
-    blobStreamVideo.end(videoFile.buffer);
-    // blobStreamThumbnail.end();
+    blobStreamVideo.end(fs.readFileSync(tempFilePath));
   } catch (error) {
     console.error("Error in uploadNewVideo:", error);
-
-    const response = {
-      status: 500,
-      message: "Internal Server Error",
-      result: {},
-    };
-
-    return res.status(500).json(response);
+    return res
+      .status(500)
+      .json({ status: 500, message: "Internal Server Error", result: {} });
   }
 };
 

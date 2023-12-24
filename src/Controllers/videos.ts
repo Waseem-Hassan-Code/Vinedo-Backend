@@ -15,7 +15,7 @@ import Hls from "hls.js";
 
 //====================================Get Videos Creator=========================================
 
-export const getVideos_Creator = async (
+export const getVideosThumbNails_Creator = async (
   req: express.Request,
   res: express.Response
 ) => {
@@ -25,6 +25,19 @@ export const getVideos_Creator = async (
 
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);
+
+    // Validate page and pageSize
+    if (
+      isNaN(pageNumber) ||
+      isNaN(pageSizeNumber) ||
+      pageNumber <= 0 ||
+      pageSizeNumber <= 0
+    ) {
+      return res.status(400).json({
+        message: "Invalid page or pageSize parameters.",
+        result: [],
+      });
+    }
 
     if (!creatorId) {
       return res.status(404).json({
@@ -47,7 +60,7 @@ export const getVideos_Creator = async (
 
     const formattedVideos = await Promise.all(
       videos.map(async (video) => {
-        const videoPath = video.fileName;
+        const videoPath = video.thumbnailName;
         const file = fileBucket.file(videoPath);
         const comments = await getComments(video._id.toString());
         const readStream = file.createReadStream();
@@ -68,7 +81,6 @@ export const getVideos_Creator = async (
       result: formattedVideos,
     });
   } catch (error) {
-    console.error("Error:", error);
     return res.status(500).json({
       message: "Internal Server Error",
       result: [],
@@ -76,51 +88,55 @@ export const getVideos_Creator = async (
   }
 };
 
-//=================================================================================================
+//============================================Get-Video-By-Id=============================================
 
-export const getVideo = async (req: express.Request, res: express.Response) => {
+export const getSingleVideo = async (
+  req: express.Request,
+  res: express.Response
+) => {
   try {
-    const { videoId } = req.query;
-    const video = await VideoModel.findById(videoId).populate("creatorId");
-    console.log(video);
-    if (!video) {
-      const response = {
-        message: "Video not found.",
+    const { videoId, creatorId } = req.query;
+
+    if (!videoId || !creatorId) {
+      return res.status(400).json({
+        message: "Invalid or missing videoId or creatorId parameters.",
         result: {},
-      };
-      return res.status(404).json(response);
+      });
     }
 
-    const comments = await VideoCommentsModel.find({
-      videoId: videoId,
-    }).populate("userId");
+    const video = await VideoModel.findOne({
+      _id: videoId,
+      creatorId: creatorId,
+    });
 
-    const result = {
+    if (!video) {
+      return res.status(404).json({
+        message: "Video not found.",
+        result: {},
+      });
+    }
+
+    const file = fileBucket.file(video.fileName);
+    const comments = await getComments(video._id.toString());
+    const readStream = file.createReadStream();
+    const buffer = await streamToBuffer(readStream);
+
+    const formattedVideo = {
+      videoId: video._id,
       title: video.title,
-      description: video.description,
-      url: video.url,
-      creator: video.creatorId,
-      views: video.views,
-      likes: video.likes,
-      comments: comments.map((comment) => ({
-        comment: comment.comment,
-        user: comment.userId,
-      })),
+      comments,
+      videoData: buffer.toString("base64"),
     };
 
-    const response = {
-      message: "Video retrieved.",
-      result: { result },
-    };
-
-    return res.status(200).json(response);
+    return res.status(200).json({
+      message: "Video retrieved successfully.",
+      result: formattedVideo,
+    });
   } catch (error) {
-    const response = {
-      status: 500,
+    return res.status(500).json({
       message: "Internal Server Error",
-      result: { error },
-    };
-    return res.status(500).json(response);
+      result: {},
+    });
   }
 };
 

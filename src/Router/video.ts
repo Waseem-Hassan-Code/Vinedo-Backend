@@ -4,19 +4,19 @@ import {
   LikeDislikeVideos,
   LikenOnVid,
   delete_A_Comment,
-  getVideo,
-  getVideos_Creator,
+  getSingleVideo,
+  getVideosThumbNails_Creator,
   postComment,
   update_A_Comment,
 } from "../Controllers/videos";
 
 export default (router: express.Router) => {
   router.get(
-    "/video/getVideo_Creator/:creatorId",
+    "/video/getVideoThumbnails_Creator/:creatorId",
     authenticateToken,
-    getVideos_Creator
+    getVideosThumbNails_Creator
   );
-  router.get("/video/getVideo", authenticateToken, getVideo);
+  router.get("/video/getVideo", authenticateToken, getSingleVideo);
   router.post("/video/postComments", authenticateToken, postComment);
   router.get("/video/deleteComments", authenticateToken, delete_A_Comment);
   router.post("/video/updateComments", authenticateToken, update_A_Comment);
