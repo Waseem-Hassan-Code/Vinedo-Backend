@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import fs from "fs";
 import { Stream } from "stream";
-import ffmpeg from "ffmpeg-static";
+// import ffmpeg from "ffmpeg-static";
+const ffmpeg = require("ffmpeg-stream");
 
 const SECRET = "THIS-IS-SECRETHEXADECIMAL*^^%!42dlaaflJLK";
 
@@ -47,51 +48,49 @@ export var streamToBuffer = (stream: Stream): Promise<Buffer> => {
 
 //..................................GENERATE THUMBNAIL FOR VIDEO....................................
 
-export const generateThumbnail = async (
-  inputPath: string,
-  outputPath: string
-) => {
-  console.log(ffmpeg);
-  return new Promise<void>((resolve, reject) => {
-    const spawn = require("child_process").spawn;
-    const process = spawn(ffmpeg, [
-      "-i",
-      inputPath,
-      "-ss",
-      "20%",
-      "-vframes",
-      "1",
-      "-s",
-      "320x240",
-      `${outputPath}/thumbnail.png`,
-    ]);
+// export const generateThumbnail = async (
+//   videoUrl: string,
+//   outputPath: string
+// ): Promise<Buffer> => {
+//   return new Promise<Buffer>((resolve, reject) => {
+//     const spawn = require("child_process").spawn;
+//     const outputBuffer: Buffer[] = [];
 
-    process.on("close", (code: number) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`ffmpeg process exited with code ${code}`));
-      }
-    });
+//     const process = spawn(ffmpeg, [
+//       "-i",
+//       videoUrl,
+//       "-ss",
+//       "20%",
+//       "-vframes",
+//       "1",
+//       "-s",
+//       "320x240",
+//       "-f",
+//       "image2pipe",
+//       "pipe:1", // Output to stdout as image
+//     ]);
 
-    process.on("error", (err: Error) => {
-      reject(err);
-    });
+//     process.stdout.on("data", (data: Buffer) => {
+//       outputBuffer.push(data);
+//     });
 
-    // Capture FFmpeg output to handle errors
-    let ffmpegOutput = "";
-    process.stderr.on("data", (data: Buffer) => {
-      ffmpegOutput += data.toString();
-    });
+//     process.on("close", (code: number) => {
+//       if (code === 0) {
+//         const concatenatedBuffer = Buffer.concat(outputBuffer);
+//         resolve(concatenatedBuffer);
+//       } else {
+//         reject(new Error(`ffmpeg process exited with code ${code}`));
+//       }
+//     });
 
-    process.on("exit", (code: number) => {
-      if (code !== 0) {
-        reject(
-          new Error(
-            `ffmpeg process exited with code ${code}. Output: ${ffmpegOutput}`
-          )
-        );
-      }
-    });
-  });
-};
+//     process.on("error", (err: Error) => {
+//       reject(err);
+//     });
+
+//     process.on("exit", (code: number) => {
+//       if (code !== 0) {
+//         reject(new Error(`ffmpeg process exited with code ${code}.`));
+//       }
+//     });
+//   });
+// };
