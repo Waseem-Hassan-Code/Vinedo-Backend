@@ -104,7 +104,7 @@ export default (router: express.Router) => {
 
   router.post("/auth/updatePassword", updatePassword);
 
-  router.post("/auth/updatePassword", authenticateToken, userPersonalInfo);
+  router.post("/auth/updatePersonalInfo", authenticateToken, userPersonalInfo);
 
   /**
    * @openapi
