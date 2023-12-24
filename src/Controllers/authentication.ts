@@ -388,10 +388,15 @@ export const userPersonalInfo = async (
     }
 
     const updateInfo = await updateUserInfo(userId, name, location, bio);
+
+    const getInfo = await UserModel.findById(userId)
+      .select("name location dateOfBirth bio createdAt")
+      .lean();
+
     if (updateInfo) {
       const response = {
         message: "User Info Updated.",
-        result: {},
+        result: getInfo,
       };
       return res.status(200).json(response);
     } else {
