@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import fs from "fs";
 import { Stream } from "stream";
-import ffmpeg from "fluent-ffmpeg";
+import ffmpeg from "ffmpeg-static";
 
 const SECRET = "THIS-IS-SECRETHEXADECIMAL*^^%!42dlaaflJLK";
 
@@ -46,24 +46,36 @@ export var streamToBuffer = (stream: Stream): Promise<Buffer> => {
 };
 
 //..................................GENERATE THUMBNAIL FOR VIDEO....................................
+
 export const generateThumbnail = async (
   inputPath: string,
   outputPath: string
 ) => {
+  console.log(ffmpeg);
   return new Promise<void>((resolve, reject) => {
-    ffmpeg(inputPath)
-      .on("end", () => {
+    const spawn = require("child_process").spawn;
+    const process = spawn(ffmpeg, [
+      "-i",
+      inputPath,
+      "-ss",
+      "20%",
+      "-vframes",
+      "1",
+      "-s",
+      "320x240",
+      `${outputPath}/thumbnail.png`,
+    ]);
+
+    process.on("close", (code: number) => {
+      if (code === 0) {
         resolve();
-      })
-      .on("error", (err: any) => {
-        reject(err);
-      })
-      .screenshots({
-        count: 1,
-        folder: outputPath,
-        filename: "thumbnail.png",
-        timestamps: ["20%"],
-        size: "320x240",
-      });
+      } else {
+        reject(new Error(`ffmpeg process exited with code ${code}`));
+      }
+    });
+
+    process.on("error", (err: Error) => {
+      reject(err);
+    });
   });
 };

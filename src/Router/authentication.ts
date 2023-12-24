@@ -8,6 +8,7 @@
 import express from "express";
 import {
   forgetPassword,
+  getPersonalInfo,
   login,
   register,
   registerCreator,
@@ -105,6 +106,7 @@ export default (router: express.Router) => {
   router.post("/auth/updatePassword", updatePassword);
 
   router.post("/auth/updatePersonalInfo", authenticateToken, userPersonalInfo);
+  router.get("/auth/getPersonalInfo", authenticateToken, getPersonalInfo);
 
   /**
    * @openapi

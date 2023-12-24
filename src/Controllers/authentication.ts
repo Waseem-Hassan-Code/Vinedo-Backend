@@ -327,6 +327,48 @@ export const updatePassword = async (
     return res.status(500).json(response);
   }
 };
+// ================================getUser Personal Info==================================
+
+export const getPersonalInfo = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      const response = {
+        message: "UserId is required.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
+    const getInfo = await UserModel.findById(userId)
+      .select("name location dateOfBirth bio createdAt")
+      .lean();
+
+    if (getInfo) {
+      const response = {
+        message: "User Info Updated.",
+        result: getInfo,
+      };
+      return res.status(200).json(response);
+    } else {
+      const response = {
+        message: "Unable to update at the moment.",
+        result: {},
+      };
+      return res.status(401).json(response);
+    }
+  } catch {
+    const response = {
+      message: "Internal server error.",
+      result: {},
+    };
+    return res.status(500).json(response);
+  }
+};
 
 //=====================================UPDATE-PERSONAL INFO=========================================
 
