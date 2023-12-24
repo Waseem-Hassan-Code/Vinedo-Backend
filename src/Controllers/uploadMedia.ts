@@ -12,6 +12,7 @@ import { fileBucket, fileStorage } from "../Helpers/constants";
 import { secretKey } from "../Helpers/secretKeyGnerator";
 import { addImage } from "../Model/images";
 import { authorizedUser } from "../Helpers/validateUser";
+import { generateThumbnail } from "../Helpers";
 
 // ================================upload Profile Picture==================================
 export const uploadProfilePicture = async (
@@ -126,21 +127,30 @@ export const uploadNewVideo = async (
       /\s/g,
       ""
     )}`;
-    const blob = fileBucket.file(videoName);
+    const thumbnailName = `${timestamp}_${secretKey}_thumbnail.png`; // Thumbnail name
+    const blobVideo = fileBucket.file(videoName);
+    const blobThumbnail = fileBucket.file(thumbnailName); // Blob for thumbnail
 
-    const blobStream = blob.createWriteStream();
+    const blobStreamVideo = blobVideo.createWriteStream();
+    const blobStreamThumbnail = blobThumbnail.createWriteStream(); // BlobStream for thumbnail
 
     const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
+    const thumbnailUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${thumbnailName}`;
 
-    blobStream.on("finish", async () => {
+    blobStreamVideo.on("finish", async () => {
       try {
+        // Generate thumbnail from the video
+        await generateThumbnail(videoName, thumbnailName);
+
         await addVideo({
           title,
           description,
           fileName: videoName,
           url: videoUrl,
-          creatorId,
+          thumbnailName,
+          thumbnailUrl,
           postDate: timestamp,
+          creatorId,
         });
 
         const response = {
@@ -150,6 +160,8 @@ export const uploadNewVideo = async (
 
         return res.status(200).json(response);
       } catch (error) {
+        console.error("Error in video upload:", error);
+
         const response = {
           status: 500,
           message: "Internal Server Error",
@@ -160,8 +172,8 @@ export const uploadNewVideo = async (
       }
     });
 
-    blobStream.on("error", (error) => {
-      console.error("Error in blobStream:", error);
+    blobStreamVideo.on("error", (error) => {
+      console.error("Error in blobStreamVideo:", error);
 
       const response = {
         status: 500,
@@ -172,8 +184,23 @@ export const uploadNewVideo = async (
       return res.status(500).json(response);
     });
 
-    blobStream.end(videoFile.buffer);
+    blobStreamThumbnail.on("error", (error) => {
+      console.error("Error in blobStreamThumbnail:", error);
+
+      const response = {
+        status: 500,
+        message: "Internal Server Error",
+        result: {},
+      };
+
+      return res.status(500).json(response);
+    });
+
+    blobStreamVideo.end(videoFile.buffer);
+    blobStreamThumbnail.end();
   } catch (error) {
+    console.error("Error in uploadNewVideo:", error);
+
     const response = {
       status: 500,
       message: "Internal Server Error",
@@ -183,6 +210,7 @@ export const uploadNewVideo = async (
     return res.status(500).json(response);
   }
 };
+
 // ================================upload Image==================================
 
 export const uploadNewImage = async (

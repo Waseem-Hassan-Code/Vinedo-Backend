@@ -5,6 +5,8 @@ const VideoShema = new mongoose.Schema({
   description: { type: String, required: true },
   fileName: { type: String, required: true },
   url: { type: String, required: true },
+  thumbnailName: { type: String, required: true },
+  thumbnailUrl: { type: String, required: true },
   postDate: { type: Date, required: true },
   creatorId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import fs from "fs";
 import { Stream } from "stream";
+import ffmpeg from "fluent-ffmpeg";
 
 const SECRET = "THIS-IS-SECRETHEXADECIMAL*^^%!42dlaaflJLK";
 
@@ -41,5 +42,28 @@ export var streamToBuffer = (stream: Stream): Promise<Buffer> => {
     stream.on("data", (chunk: Buffer) => chunks.push(chunk));
     stream.on("end", () => resolve(Buffer.concat(chunks)));
     stream.on("error", reject);
+  });
+};
+
+//..................................GENERATE THUMBNAIL FOR VIDEO....................................
+export const generateThumbnail = async (
+  inputPath: string,
+  outputPath: string
+) => {
+  return new Promise<void>((resolve, reject) => {
+    ffmpeg(inputPath)
+      .on("end", () => {
+        resolve();
+      })
+      .on("error", (err: any) => {
+        reject(err);
+      })
+      .screenshots({
+        count: 1,
+        folder: outputPath,
+        filename: "thumbnail.png",
+        timestamps: ["20%"],
+        size: "320x240",
+      });
   });
 };
