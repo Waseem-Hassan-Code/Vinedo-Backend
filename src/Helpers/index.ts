@@ -77,5 +77,21 @@ export const generateThumbnail = async (
     process.on("error", (err: Error) => {
       reject(err);
     });
+
+    // Capture FFmpeg output to handle errors
+    let ffmpegOutput = "";
+    process.stderr.on("data", (data: Buffer) => {
+      ffmpegOutput += data.toString();
+    });
+
+    process.on("exit", (code: number) => {
+      if (code !== 0) {
+        reject(
+          new Error(
+            `ffmpeg process exited with code ${code}. Output: ${ffmpegOutput}`
+          )
+        );
+      }
+    });
   });
 };
