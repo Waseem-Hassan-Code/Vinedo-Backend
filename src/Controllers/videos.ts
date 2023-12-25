@@ -1,5 +1,5 @@
 import express from "express";
-import { VideoModel, getAllVideosPaginated } from "../Model/videos";
+import { findVideo, getAllVideosPaginated } from "../Model/videos";
 import {
   VideoCommentsModel,
   addComment,
@@ -12,7 +12,7 @@ import { authorizedUser } from "../Helpers/validateUser";
 import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { streamToBuffer } from "../Helpers";
 import Hls from "hls.js";
-
+import { createReadStream } from "fs";
 //====================================Get Videos Creator=========================================
 
 export const getVideosThumbNails_Creator = async (
@@ -104,10 +104,7 @@ export const getSingleVideo = async (
       });
     }
 
-    const video = await VideoModel.findOne({
-      _id: videoId,
-      creatorId: creatorId,
-    });
+    const video = await findVideo(videoId.toString(), creatorId.toString());
 
     if (!video) {
       return res.status(404).json({
@@ -116,23 +113,49 @@ export const getSingleVideo = async (
       });
     }
 
+    console.log("First");
     const file = fileBucket.file(video.fileName);
-    const comments = await getComments(video._id.toString());
+    console.log("second");
+
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Accept-Ranges", "bytes");
+
     const readStream = file.createReadStream();
-    const buffer = await streamToBuffer(readStream);
+    console.log("reading");
 
-    const formattedVideo = {
-      videoId: video._id,
-      title: video.title,
-      comments,
-      videoData: buffer.toString("base64"),
-    };
+    readStream.on("open", () => {
+      const range = req.headers.range;
+      console.log(range);
 
-    return res.status(200).json({
-      message: "Video retrieved successfully.",
-      result: formattedVideo,
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1]
+          ? parseInt(parts[1], 10)
+          : (typeof file.metadata.size === "number" ? file.metadata.size : -1) -
+            1;
+
+        const chunkSize = end - start + 1;
+        console.log(chunkSize);
+
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${file.metadata.size}`,
+          "Content-Length": chunkSize,
+        });
+
+        readStream.pipe(res);
+      } else {
+        res.setHeader("Content-Length", file.metadata.size);
+        readStream.pipe(res);
+      }
+    });
+
+    readStream.on("error", (error) => {
+      console.error("Error streaming video:", error);
+      res.status(500).end();
     });
   } catch (error) {
+    console.error("Error:", error);
     return res.status(500).json({
       message: "Internal Server Error",
       result: {},

@@ -16,7 +16,7 @@ export default (router: express.Router) => {
     authenticateToken,
     getVideosThumbNails_Creator
   );
-  router.get("/video/getVideo", authenticateToken, getSingleVideo);
+  router.get("/video/getSingleVideo", authenticateToken, getSingleVideo);
   router.post("/video/postComments", authenticateToken, postComment);
   router.get("/video/deleteComments", authenticateToken, delete_A_Comment);
   router.post("/video/updateComments", authenticateToken, update_A_Comment);
