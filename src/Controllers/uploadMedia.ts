@@ -26,7 +26,7 @@ export const uploadProfilePicture = async (
 ) => {
   try {
     const { id } = req.body;
-
+    console.log(id);
     if (!id) {
       return res.status(400).json({
         status: 400,
