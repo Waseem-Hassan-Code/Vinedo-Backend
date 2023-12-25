@@ -60,23 +60,7 @@ export const login = async (req: express.Request, res: express.Response) => {
         "_id email name isContentCreator phoneNumber location dateOfBirth bio createdAt"
       )
       .lean();
-
-    const dateCreatedAt = new Date(userClaims.createdAt);
-
-    const formattedDate = dateCreatedAt.toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-      day: "numeric",
-    });
-
-    const formattedUserClaims = {
-      ...userClaims,
-      dateCreatedAt: formattedDate,
-    };
-
-    console.log(formattedUserClaims);
-
-    const userToken = createToken(formattedUserClaims);
+    const userToken = createToken(userClaims);
 
     if (userToken) {
       const response = {
