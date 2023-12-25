@@ -7,5 +7,5 @@ import {
 
 export default (router: express.Router) => {
   router.get("/userEssentials/getProfile", getProfilePicture);
-  router.get("/userEssentials/getCover", authenticateToken, getCoverPicture);
+  router.get("/userEssentials/getCover", getCoverPicture);
 };
