@@ -9,7 +9,7 @@ export const getProfilePicture = async (
   res: express.Response
 ) => {
   try {
-    const { id } = req.body;
+    const { id } = req.query;
 
     if (!id) {
       return res.status(400).json({
@@ -49,7 +49,7 @@ export const getCoverPicture = async (
   res: express.Response
 ) => {
   try {
-    const { id } = req.body;
+    const { id } = req.query;
 
     if (!id) {
       return res.status(400).json({

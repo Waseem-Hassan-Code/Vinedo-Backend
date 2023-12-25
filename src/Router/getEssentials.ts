@@ -6,10 +6,6 @@ import {
 } from "../Controllers/getUserEssentials";
 
 export default (router: express.Router) => {
-  router.post(
-    "/userEssentials/getProfile",
-    authenticateToken,
-    getProfilePicture
-  );
-  router.post("/userEssentials/getCover", authenticateToken, getCoverPicture);
+  router.get("/userEssentials/getProfile", getProfilePicture);
+  router.get("/userEssentials/getCover", authenticateToken, getCoverPicture);
 };
