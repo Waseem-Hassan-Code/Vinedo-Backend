@@ -13,7 +13,7 @@ import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { streamToBuffer } from "../Helpers";
 import Hls from "hls.js";
 import { createReadStream } from "fs";
-//====================================Get Videos Creator=========================================
+//====================================Get Videos Creato=========================================
 
 export const getVideosThumbNails_Creator = async (
   req: express.Request,
@@ -58,29 +58,34 @@ export const getVideosThumbNails_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
-    const formattedVideos = await Promise.all(
-      videos.map(async (video) => {
-        const videoPath = video.thumbnailName;
-        const file = fileBucket.file(videoPath);
-        const comments = await getComments(video._id.toString());
-        const readStream = file.createReadStream();
+    res.status(200).json({
+      message: "Videos retrieved successfully.",
+      result: [],
+    });
 
-        const buffer = await streamToBuffer(readStream);
+    // Stream each video
+    for (const video of videos) {
+      const videoPath = video.thumbnailName;
+      const file = fileBucket.file(videoPath);
+      const comments = await getComments(video._id.toString());
+      const readStream = file.createReadStream();
 
-        return {
+      res.write(
+        JSON.stringify({
           videoId: video._id,
           title: video.title,
           comments,
-          videoData: buffer.toString("base64"),
-        };
-      })
-    );
+        })
+      );
 
-    return res.status(200).json({
-      message: "Videos retrieved successfully.",
-      result: formattedVideos,
-    });
+      readStream.pipe(res, { end: false });
+
+      res.write("\n");
+    }
+
+    res.end();
   } catch (error) {
+    console.error("Error retrieving videos:", error);
     return res.status(500).json({
       message: "Internal Server Error",
       result: [],
@@ -113,19 +118,23 @@ export const getSingleVideo = async (
       });
     }
 
-    console.log("First");
     const file = fileBucket.file(video.fileName);
-    console.log("second");
 
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Accept-Ranges", "bytes");
 
     const readStream = file.createReadStream();
-    console.log("reading");
+
+    res.write(
+      JSON.stringify({
+        videoId: video._id,
+        title: video.title,
+        description: video.description,
+      })
+    );
 
     readStream.on("open", () => {
       const range = req.headers.range;
-      console.log(range);
 
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
@@ -143,12 +152,14 @@ export const getSingleVideo = async (
           "Content-Length": chunkSize,
         });
 
-        readStream.pipe(res);
+        readStream.pipe(res, { end: false });
       } else {
         res.setHeader("Content-Length", file.metadata.size);
         readStream.pipe(res);
       }
     });
+
+    res.write("\n");
 
     readStream.on("error", (error) => {
       console.error("Error streaming video:", error);
@@ -162,7 +173,6 @@ export const getSingleVideo = async (
     });
   }
 };
-
 //=========================================Post a comment==============================================
 
 export const postComment = async (

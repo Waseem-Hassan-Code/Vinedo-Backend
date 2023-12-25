@@ -70,6 +70,10 @@ const UserShema = new mongoose.Schema({
     imageName: { type: String, default: `` },
     imagePath: { type: String, default: "" },
   },
+  cover: {
+    imageName: { type: String, default: `` },
+    imagePath: { type: String, default: "" },
+  },
   name: { type: String, required: true },
   authentication: {
     password: { type: String, required: true, select: false },
@@ -186,11 +190,36 @@ export const updateProfilePicture = (
   });
 };
 
+export const updateCoverPicture = (
+  id: string,
+  imageName: string,
+  imagePath: string
+) => {
+  const updateQuery = {
+    $set: {
+      "cover.imageName": imageName,
+      "cover.imagePath": imagePath,
+    },
+  };
+  return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
+    new: true,
+  });
+};
+
 export const deleteProfilePicture = (id: string) => {
   const updateQuery = {
     $set: { "avatar.imagePath": "", "avatar.imageName": "" },
   };
 
+  return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
+    new: true,
+  });
+};
+
+export const deleteCoverPicture = (id: string) => {
+  const updateQuery = {
+    $set: { "cover.imagePath": "", "cover.imageName": "" },
+  };
   return UserModel.findOneAndUpdate({ _id: id }, updateQuery, {
     new: true,
   });

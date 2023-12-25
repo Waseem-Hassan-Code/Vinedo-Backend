@@ -6,6 +6,7 @@ import video from "./video";
 import images from "./images";
 import userSubscriptions from "./userSubscriptions";
 import userAuthorizedContent from "./userAuthorizedContent";
+import getEssentials from "./getEssentials";
 const router = express.Router();
 
 export default (): express.Router => {
@@ -16,6 +17,7 @@ export default (): express.Router => {
   images(router);
   userSubscriptions(router);
   userAuthorizedContent(router);
+  getEssentials(router);
 
   return router;
 };

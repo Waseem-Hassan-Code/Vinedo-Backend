@@ -1,9 +1,10 @@
 import express from "express";
-import mongoose from "mongoose";
 import {
   updateProfilePicture,
   UserModel,
   deleteProfilePicture,
+  updateCoverPicture,
+  deleteCoverPicture,
 } from "../Model/users";
 import { addVideo } from "../Model/videos";
 import { fileBucket, fileStorage } from "../Helpers/constants";
@@ -85,6 +86,87 @@ export const uploadProfilePicture = async (
     blobStream.end(imageFile.buffer);
   } catch (error) {
     console.error("Error in uploadProfilePicture:", error);
+    return sendInternalError(res);
+  }
+};
+
+//================================upload cover===================================
+export const uploadCoverPicture = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid request. 'userId' is required.",
+        result: {},
+      });
+    }
+
+    const isAuthorized = await authorizedUser(id);
+    if (!isAuthorized) {
+      const response = {
+        message: "You are not authorized to upload a video.",
+        result: {},
+      };
+      return res.status(403).json(response);
+    }
+
+    const user = await UserModel.findById(id)
+      .select("cover.imageName cover.imagePath")
+      .exec();
+
+    if (user.cover.imagePath && user.cover.imagePath !== "") {
+      await deleteCoverPicture(id);
+    }
+
+    const coverFile = req.file;
+
+    if (!coverFile) {
+      return res.status(400).json({
+        status: 400,
+        message: "No file uploaded or file URL not found.",
+        result: {},
+      });
+    }
+
+    const timestamp = Date.now();
+    const imageName = `${timestamp}_${secretKey}_${coverFile.originalname.replace(
+      /\s/g,
+      ""
+    )}`;
+    const blob = fileBucket.file(imageName);
+
+    const blobStream = blob.createWriteStream();
+    const imageURL = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${imageName}`;
+
+    blobStream.on("finish", async () => {
+      try {
+        await updateCoverPicture(id, imageName, imageURL);
+
+        const response = {
+          message: "Image uploaded successfully.",
+          result: {},
+        };
+
+        return res.status(200).json(response);
+      } catch (error) {
+        console.error("Error updating user cover picture:", error);
+        return sendInternalError(res);
+      }
+    });
+
+    blobStream.on("error", (error) => {
+      console.error("Error in blobStream:", error);
+      return sendInternalError(res);
+    });
+
+    blobStream.end(coverFile.buffer);
+  } catch (error) {
+    console.error("Error in uploadCoverPicture:", error);
     return sendInternalError(res);
   }
 };
