@@ -3,6 +3,7 @@ import {
   uploadProfilePicture,
   uploadNewVideo,
   uploadNewImage,
+  uploadCoverPicture,
 } from "../Controllers/uploadMedia";
 import { authenticateToken } from "../Middleware";
 import {
@@ -31,5 +32,12 @@ export default (router: express.Router) => {
     authenticateToken,
     uploadImage.single("Image"),
     uploadNewImage
+  );
+
+  router.post(
+    "/uploadFile/Cover",
+    authenticateToken,
+    uploadProfile.single("Avatar"),
+    uploadCoverPicture
   );
 };
