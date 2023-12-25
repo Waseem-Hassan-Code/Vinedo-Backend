@@ -14,6 +14,7 @@ import { authorizedUser } from "../Helpers/validateUser";
 import fs from "fs";
 //import { processVideo } from "../Helpers";
 import path from "path";
+import sharp from "sharp";
 
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 var ffmpeg = require("fluent-ffmpeg");
@@ -52,6 +53,11 @@ export const uploadProfilePicture = async (
       });
     }
 
+    const compressedBuffer = await sharp(imageFile.buffer)
+      .resize({ width: 800 })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
     const timestamp = Date.now();
     const imageName = `${timestamp}_${secretKey}_${imageFile.originalname.replace(
       /\s/g,
@@ -83,7 +89,7 @@ export const uploadProfilePicture = async (
       return sendInternalError(res);
     });
 
-    blobStream.end(imageFile.buffer);
+    blobStream.end(compressedBuffer);
   } catch (error) {
     console.error("Error in uploadProfilePicture:", error);
     return sendInternalError(res);
