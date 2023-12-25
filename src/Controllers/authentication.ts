@@ -60,7 +60,23 @@ export const login = async (req: express.Request, res: express.Response) => {
         "_id email name isContentCreator phoneNumber location dateOfBirth bio createdAt"
       )
       .lean();
-    const userToken = createToken(userClaims);
+
+    const dateCreatedAt = new Date(userClaims.createdAt);
+
+    const formattedDate = dateCreatedAt.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+      day: "numeric",
+    });
+
+    const formattedUserClaims = {
+      ...userClaims,
+      dateCreatedAt: formattedDate,
+    };
+
+    console.log(formattedUserClaims);
+
+    const userToken = createToken(formattedUserClaims);
 
     if (userToken) {
       const response = {
@@ -99,7 +115,7 @@ export const register = async (req: express.Request, res: express.Response) => {
         message: "Provide complete information, fill all the fields!",
         result: {},
       };
-      return res.status(400).json(response); // Sending status code 400 with JSON response
+      return res.status(400).json(response);
     }
 
     const verifyEmail = await sendEmail(
@@ -122,7 +138,7 @@ export const register = async (req: express.Request, res: express.Response) => {
         message: "User is already registered!",
         result: {},
       };
-      return res.status(409).json(response); // Sending status code 409 with JSON response
+      return res.status(409).json(response);
     }
 
     const salt = random();
@@ -143,10 +159,10 @@ export const register = async (req: express.Request, res: express.Response) => {
       message: "User registered successfully!",
       result: user,
     };
-    return res.json(response); // Sending status code 200 with JSON response
+    return res.json(response);
   } catch (error) {
     console.log(error);
-    return res.sendStatus(500); // Sending status code 500 for server error
+    return res.sendStatus(500);
   }
 };
 

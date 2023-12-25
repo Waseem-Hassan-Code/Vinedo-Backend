@@ -138,6 +138,11 @@ export const uploadCoverPicture = async (
       });
     }
 
+    const compressedBuffer = await sharp(coverFile.buffer)
+      .resize({ width: 800 })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
     const timestamp = Date.now();
     const imageName = `${timestamp}_${secretKey}_${coverFile.originalname.replace(
       /\s/g,
@@ -169,7 +174,7 @@ export const uploadCoverPicture = async (
       return sendInternalError(res);
     });
 
-    blobStream.end(coverFile.buffer);
+    blobStream.end(compressedBuffer);
   } catch (error) {
     console.error("Error in uploadCoverPicture:", error);
     return sendInternalError(res);
@@ -357,7 +362,7 @@ export const uploadNewImage = async (
 
     if (!isAuthorized) {
       const response = {
-        message: "You are not authorized to upload a image.",
+        message: "You are not authorized to upload an image.",
         result: {},
       };
       return res.status(403).json(response);
@@ -370,9 +375,13 @@ export const uploadNewImage = async (
     )}`;
     const blob = fileBucket.file(imageName);
 
-    const blobStream = blob.createWriteStream();
+    const compressedBuffer = await sharp(imageFile.buffer)
+      .resize({ width: 800 }) // Adjust the width as needed
+      .jpeg({ quality: 80 }) // Adjust the quality as needed
+      .toBuffer();
 
-    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${imageName}`;
+    const blobStream = blob.createWriteStream();
+    const imageUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${imageName}`;
 
     blobStream.on("finish", async () => {
       try {
@@ -380,7 +389,7 @@ export const uploadNewImage = async (
           title,
           description,
           fileName: imageName,
-          url: videoUrl,
+          url: imageUrl,
           creatorId,
           postDate: timestamp,
         });
@@ -392,6 +401,8 @@ export const uploadNewImage = async (
 
         return res.status(200).json(response);
       } catch (error) {
+        console.error("Error in adding image to the database:", error);
+
         const response = {
           status: 500,
           message: "Internal Server Error",
@@ -414,8 +425,10 @@ export const uploadNewImage = async (
       return res.status(500).json(response);
     });
 
-    blobStream.end(imageFile.buffer);
+    blobStream.end(compressedBuffer);
   } catch (error) {
+    console.error("Error in uploadNewImage:", error);
+
     const response = {
       status: 500,
       message: "Internal Server Error",
