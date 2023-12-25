@@ -140,7 +140,7 @@ export const uploadCoverPicture = async (
 
     const compressedBuffer = await sharp(coverFile.buffer)
       .resize({ width: 800 })
-      .jpeg({ quality: 80 })
+      .jpeg({ quality: 90 })
       .toBuffer();
 
     const timestamp = Date.now();

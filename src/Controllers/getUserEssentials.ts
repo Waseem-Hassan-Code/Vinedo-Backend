@@ -66,7 +66,7 @@ export const getCoverPicture = async (
     if (!user || !user.cover || !user.cover.imageName) {
       return res.status(404).json({
         status: 404,
-        message: "User or user avatar not found.",
+        message: "User or user cover not found.",
         result: {},
       });
     }
