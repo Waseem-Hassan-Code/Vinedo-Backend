@@ -1,4 +1,7 @@
-import { creatorSubscriptionModel } from "../Model/creatorSubDetails";
+import {
+  creatorSubscriptionModel,
+  getCreatorSubscriptionDetails,
+} from "../Model/creatorSubDetails";
 
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 
@@ -42,12 +45,12 @@ async function getCreatorPrice(creatorId: string): Promise<number | null> {
   }
 }
 
-async function getCreatorEmail(creatorId: string): Promise<string | null> {
+async function getCreatorSubscriptioDetails(creatorId: string) {
   try {
-    const creatorEmail = await creatorSubscriptionModel.findOne({ creatorId });
+    const creatorDetails = await getCreatorSubscriptionDetails(creatorId);
 
-    if (creatorEmail) {
-      return creatorEmail.payPalEmail;
+    if (creatorDetails) {
+      return creatorDetails;
     } else {
       return null;
     }
@@ -106,12 +109,15 @@ async function executePayPalPayouts(senderBatchId: string, items: any[]) {
 }
 
 // Function to initiate the payment process
-export async function initiatePayment(creatorId: string, totalAmount: number) {
+export async function initiatePayment(creatorId: string) {
   try {
     // Retrieve seller and admin emails from the database
-    const sellerEmail = await getCreatorEmail(creatorId);
+    const sellerDetails = await getCreatorSubscriptioDetails(creatorId);
 
-    if (!sellerEmail) {
+    const sellerEmail = sellerDetails.payPalEmail;
+    const totalAmount = sellerDetails.subscriptionPrice;
+
+    if (!sellerDetails) {
       throw new Error("Seller email not found.");
     }
 
@@ -126,7 +132,7 @@ export async function initiatePayment(creatorId: string, totalAmount: number) {
       {
         recipient_type: "EMAIL",
         amount: {
-          value: sellerAmount.toFixed(2), // Ensure proper formatting
+          value: sellerAmount.toFixed(2),
           currency: "USD",
         },
         receiver: sellerEmail,
@@ -135,7 +141,7 @@ export async function initiatePayment(creatorId: string, totalAmount: number) {
       {
         recipient_type: "EMAIL",
         amount: {
-          value: adminAmount.toFixed(2), // Ensure proper formatting
+          value: adminAmount.toFixed(2),
           currency: "USD",
         },
         receiver: adminEmail,
@@ -150,7 +156,6 @@ export async function initiatePayment(creatorId: string, totalAmount: number) {
   }
 }
 
-const creatorId = "657486e3410a225e3ed58a8a";
-const totalAmount = 100;
+//initiatePayment(creatorId);
 
-initiatePayment(creatorId, totalAmount);
+//================================================================================================

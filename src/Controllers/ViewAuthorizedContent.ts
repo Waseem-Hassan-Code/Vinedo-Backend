@@ -30,7 +30,7 @@ export const getVideos_User = async (
     const subscription = await checkUserSubscription(userId, creatorId);
 
     if (!subscription) {
-      return res.status(404).json({
+      return res.status(401).json({
         message: "You are not currently subscribed to this creator.",
         result: [],
       });

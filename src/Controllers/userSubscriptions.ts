@@ -7,7 +7,7 @@ import {
   getAllUserRequests,
   subscriptionsCount,
 } from "../Model/subscriptions";
-import { customSubscribed, subscribed } from "../Helpers/subscriptionBridge";
+import { customSubscribed, subscribe } from "../Helpers/subscriptionBridge";
 import { findCreator } from "../Model/users";
 
 //==================================================Pay Normal Amount===========================================================
@@ -17,17 +17,17 @@ export const payNormalAmount = async (
 ) => {
   try {
     const { userId, creatorId, subscriptionId } = req.body;
-    if (!userId || !creatorId || subscriptionId) {
+    if (!userId || !creatorId || !subscriptionId) {
       const response = {
         message: "Invalid request. Required data not provided.",
         result: {},
       };
       return res.sendStatus(400).json(response);
     }
-    const makePayment = await subscribed(userId, creatorId, subscriptionId);
+    const makePayment = await subscribe(userId, creatorId, subscriptionId);
     if (makePayment) {
       const response = {
-        message: "Request sent to creator.",
+        message: "Subscription successful!",
         result: { makePayment },
       };
       return res.sendStatus(200).json(response);
@@ -131,7 +131,7 @@ export const requestCustomSub = async (
   }
 };
 
-//================================================Accept Subscription===========================================================
+//================================================Accept Subscription===============================================
 export const accepttSubscription = async (
   req: express.Request,
   res: express.Response

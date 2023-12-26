@@ -10,9 +10,10 @@ import {
   notSubscribed,
   removedFromSubscription,
 } from "./constants";
+import { initiatePayment } from "./payPayIntegration";
 
 //==========================================Normal Subscription=======================================
-export const subscribed = async (
+export const subscribe = async (
   userId: string,
   creatorId: string,
   subscriptionId: string
@@ -28,12 +29,14 @@ export const subscribed = async (
     case alreadySubscribed:
       return false;
     case notSubscribed:
-      //Integrate Paypal here
-      if (subscriptionDetails.subscriptionPrice) {
+      //papal integration
+      const payment = initiatePayment(creatorId);
+      if (payment) {
         if (await newSubscription(userId, creatorId, subscriptionId)) {
           return true;
         }
       }
+      return false;
     default:
       return false;
   }
@@ -64,7 +67,7 @@ export const customSubscribed = async (
         return false;
       case notSubscribed:
         if (requestStatus.userQuotation) {
-          //Integrate Paypal here
+          // initiatePayment(creatorId);
           if (await newSubscription(userId, creatorId, subscriptionId)) {
             return true;
           }
