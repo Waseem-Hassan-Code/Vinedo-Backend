@@ -150,7 +150,7 @@ export const register = async (req: express.Request, res: express.Response) => {
   }
 };
 
-//--------------------Forget and Update Password---------------
+//----------------------------Forget and Update Password--------------------------
 export const forgetPassword = async (
   req: express.Request,
   res: express.Response
@@ -167,12 +167,11 @@ export const forgetPassword = async (
 
   const existingUser = await getUserByEmail(email);
   if (!existingUser) {
-    const response: ResponseDto = {
-      status: 400,
+    const response = {
       message: "Email address not found!",
       result: {},
     };
-    return res.json(response);
+    return res.status(400).json(response);
   }
 
   const user = await getUserByEmail(email);
@@ -215,7 +214,7 @@ export const forgetPassword = async (
   }
 };
 
-//------------------------------------------------------------------------------------------------------
+//-----------------------------------------------Verify OTP-----------------------------------------------
 export const verifyOTP = async (
   req: express.Request,
   res: express.Response
