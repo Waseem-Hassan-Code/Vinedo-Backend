@@ -12,9 +12,7 @@ import {
   updateUserPassword,
   UserModel,
 } from "../Model/users";
-import express, { response } from "express";
-import { ResponseDto } from "Model/response";
-import { json } from "body-parser";
+import express from "express";
 import { createToken } from "../Helpers/jwtTokens";
 import { sendEmail } from "../Helpers/nodeMailer";
 
@@ -198,7 +196,7 @@ export const forgetPassword = async (
 
       const response = {
         message: "OTP sent successfully.",
-        result: { otp },
+        result: {},
       };
       return res.status(200).json(response);
     } catch (error) {

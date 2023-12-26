@@ -33,6 +33,18 @@ export const UserSubscriptionModel = mongoose.model(
   userSubscriptionShema
 );
 
+export const checkUserRecord = async (
+  userId: string,
+  creatorId: string,
+  subscriptionId: string
+) => {
+  return await UserSubscriptionModel.findOne({
+    userId: userId,
+    creatorId: creatorId,
+    subscriptionId: subscriptionId,
+  });
+};
+
 export const subscriptionsCount = async (creatorId: string) => {
   return await UserSubscriptionModel.countDocuments({
     creatorId: creatorId,
@@ -121,12 +133,12 @@ export const requestSubscription = (values: Record<string, any>) => {
 
 export const getSubscriptionDetails = (
   userId: string,
-  creatoId: string,
+  creatorId: string,
   subscriptionId: string
 ) => {
   return UserSubscriptionModel.findOne({
     userId,
-    creatoId,
+    creatorId,
     subscriptionId,
     isSubscribed: true,
   });

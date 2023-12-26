@@ -17,9 +17,6 @@ export const payNormalAmount = async (
 ) => {
   try {
     const { userId, creatorId, subscriptionId } = req.body;
-    console.log(userId, "user");
-    console.log(creatorId, "cre");
-    console.log(subscriptionId, "sub");
     if (!userId || !creatorId || !subscriptionId) {
       return res.status(400).json({
         message: "Invalid request. Required data not provided.",
@@ -29,10 +26,15 @@ export const payNormalAmount = async (
 
     const makePayment = await subscribe(userId, creatorId, subscriptionId);
 
-    if (makePayment) {
+    if (makePayment === "SUBSCRIBED") {
       return res.status(200).json({
         message: "Subscription successful!",
         result: { makePayment },
+      });
+    } else if (makePayment === "ALREADYSUBSCRIBED") {
+      return res.status(301).json({
+        message: "Already Subscribed!",
+        result: {},
       });
     } else {
       return res.status(400).json({
