@@ -40,7 +40,7 @@ export default (router: express.Router) => {
     payCustomAmount
   );
   router.post(
-    "/subscription/requestNormalAmount",
+    "/subscription/payNormalAmount",
     authenticateToken,
     isValidUser,
     payNormalAmount
