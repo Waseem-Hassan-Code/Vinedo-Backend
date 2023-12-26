@@ -13,7 +13,7 @@ import {
 } from "../Model/subscriptions";
 import { authorizedUser } from "../Helpers/validateUser";
 
-//===================================================================
+//===============================SET SUBSCRIPTION====================================
 
 export const setCreatorSub = async (
   req: express.Request,

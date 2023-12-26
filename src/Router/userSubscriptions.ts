@@ -12,6 +12,7 @@ import {
 import { isValidUser } from "../Middleware/validateUser";
 import { isValidContentCreator } from "../Middleware/validCreator";
 import { subscriptionsCount } from "../Model/subscriptions";
+import { setCreatorSub } from "../Controllers/handleSubscriptionDetailss";
 
 export default (router: express.Router) => {
   router.post(
@@ -64,5 +65,11 @@ export default (router: express.Router) => {
     "/subscription/SubscriptionsCount/:creatorId",
     authenticateToken,
     subscriptionsCount
+  );
+
+  router.post(
+    "/subscription/setSubscriptionDetails",
+    authenticateToken,
+    setCreatorSub
   );
 };

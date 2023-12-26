@@ -3,7 +3,9 @@ import { UserModel } from "../Model/users";
 import express from "express";
 import { streamToBuffer } from "../Helpers";
 import { json } from "body-parser";
+import { creatorSubscriptionModel } from "../Model/creatorSubDetails";
 
+//================================================GET Profile==================================================
 export const getProfilePicture = async (
   req: express.Request,
   res: express.Response
@@ -43,7 +45,7 @@ export const getProfilePicture = async (
     });
   }
 };
-//================================================GET COVER==================================================
+//=====================================GET COVER=====================================
 export const getCoverPicture = async (
   req: express.Request,
   res: express.Response
@@ -75,6 +77,50 @@ export const getCoverPicture = async (
     const readStream = file.createReadStream();
 
     readStream.pipe(res);
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};
+
+//=====================================GET SUBSCRIPTION DETAILS===================================
+
+export const getSubscriptionDetail = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid request. 'userId' is required.",
+        result: {},
+      });
+    }
+
+    const user = await creatorSubscriptionModel
+      .findOne({ creatorId: id })
+      .select("cover.imageName cover.imagePath subscriptionPrice payPalEmail")
+      .lean()
+      .exec();
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User or user details not found.",
+        result: {},
+      });
+    } else if (user.payPalEmail || user.subscriptionPrice) {
+      return res.status(200).json({
+        message: "Creator Subscription Details Retrived",
+        result: { user },
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       status: 500,
