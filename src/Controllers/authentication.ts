@@ -171,18 +171,17 @@ export const forgetPassword = async (
       message: "Email address not found!",
       result: {},
     };
-    return res.status(400).json(response);
+    return res.status(404).json(response);
   }
 
   const user = await getUserByEmail(email);
 
   if (!user) {
     const response = {
-      status: 400,
       message: "User not found.",
       result: {},
     };
-    return res.status(400).json(response);
+    return res.status(404).json(response);
   } else {
     const otp = generateOTP();
 
@@ -198,18 +197,16 @@ export const forgetPassword = async (
       otpStorage.set(email, { otp, expirationTime });
 
       const response = {
-        status: 200,
         message: "OTP sent successfully.",
         result: { otp },
       };
       return res.status(200).json(response);
     } catch (error) {
       const response = {
-        status: 500,
         message: "Email sending failed.",
         result: {},
       };
-      return res.json(response);
+      return res.status(500).json(response);
     }
   }
 };
