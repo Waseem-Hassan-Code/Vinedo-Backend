@@ -32,10 +32,34 @@ export const getCreatorSubscriptionDetails = (creatorId: string) => {
   return creatorSubscriptionModel.findOne({ creatorId: creatorId });
 };
 
-export const setCreatorSubscriptionDetails = (values: Record<string, any>) => {
-  return new creatorSubscriptionModel(values)
-    .save()
-    .then((subscription) => subscription.toObject());
+export const setCreatorSubscriptionDetails = async (
+  values: Record<string, any>
+) => {
+  const check = await creatorSubscriptionModel.findOne({
+    creatorId: values.creatorId,
+  });
+
+  if (check) {
+    const updateDoc = {
+      $set: {
+        subscriptionPrice: values.subscriptionPrice,
+        payPalEmail: values.payPalEmail,
+      },
+    };
+
+    await creatorSubscriptionModel.updateOne(
+      { creatorId: values.creatorId },
+      updateDoc
+    );
+    return updateDoc;
+  } else {
+    return creatorSubscriptionModel
+      .create(values)
+      .then((subscription) => subscription.toObject())
+      .catch((error) => {
+        throw error;
+      });
+  }
 };
 
 export const upDateSubscriptionDetails = (
