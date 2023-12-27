@@ -105,14 +105,14 @@ export const getSubscriptionDetail = async (
 
     const user = await creatorSubscriptionModel
       .findOne({ creatorId: id })
-      .select("cover.imageName cover.imagePath subscriptionPrice payPalEmail")
+      .select("subscriptionPrice payPalEmail")
       .lean()
       .exec();
 
     if (!user) {
       return res.status(404).json({
         status: 404,
-        message: "User or user details not found.",
+        message: "Creator Subscription details not found.",
         result: {},
       });
     } else if (user.payPalEmail || user.subscriptionPrice) {

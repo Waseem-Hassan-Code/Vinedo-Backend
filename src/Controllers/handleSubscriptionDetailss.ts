@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import {
   setCreatorSubscriptionDetails,
   getCreatorSubscriptionDetails,
@@ -18,7 +17,7 @@ import { authorizedUser } from "../Helpers/validateUser";
 export const setCreatorSub = async (
   req: express.Request,
   res: express.Response
-): Promise<void> => {
+) => {
   try {
     const { creatorId, subscriptionPrice, payPalEmail } = req.body;
 
@@ -27,7 +26,7 @@ export const setCreatorSub = async (
         message: 'Invalid request. "creatorId" is required.',
         result: {},
       };
-      res.status(400).json(response);
+      return res.status(400).json(response);
     }
 
     const authorized = await authorizedUser(creatorId);
@@ -36,7 +35,7 @@ export const setCreatorSub = async (
         message: "Invalid request. You are unauthorized for this request.",
         result: {},
       };
-      res.status(400).json(response);
+      return res.status(400).json(response);
     }
 
     const updatedData = await setCreatorSubscriptionDetails({
@@ -50,10 +49,10 @@ export const setCreatorSub = async (
         message: "Data update failed!",
         result: updatedData,
       };
-      res.status(400).json(response);
+      return res.status(400).json(response);
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Data updated!",
       result: updatedData,
     });
@@ -62,7 +61,7 @@ export const setCreatorSub = async (
       message: "Internal server error!",
       result: { error },
     };
-    res.status(500).json(response);
+    return res.status(500).json(response);
   }
 };
 

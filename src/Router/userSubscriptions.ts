@@ -4,7 +4,6 @@ import {
   accepttSubscription,
   denytSubscription,
   getAcceptedUserRequests,
-  payCustomAmount,
   payNormalAmount,
   requestCustomSub,
   search_Creator,
@@ -33,14 +32,14 @@ export default (router: express.Router) => {
     isValidUser,
     requestCustomSub
   );
+  // router.post(
+  //   "/subscription/payCustomAmount",
+  //   authenticateToken,
+  //   isValidUser,
+  //   payCustomAmount
+  // );
   router.post(
-    "/subscription/payCustomAmount",
-    authenticateToken,
-    isValidUser,
-    payCustomAmount
-  );
-  router.post(
-    "/subscription/requestNormalAmount",
+    "/subscription/payNormalAmount",
     authenticateToken,
     isValidUser,
     payNormalAmount

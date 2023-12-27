@@ -7,7 +7,7 @@ import {
   getAllUserRequests,
   subscriptionsCount,
 } from "../Model/subscriptions";
-import { customSubscribed, subscribe } from "../Helpers/subscriptionBridge";
+import { subscribe } from "../Helpers/subscriptionBridge";
 import { findCreator } from "../Model/users";
 
 //==================================================Pay Normal Amount===========================================================
@@ -18,75 +18,79 @@ export const payNormalAmount = async (
   try {
     const { userId, creatorId, subscriptionId } = req.body;
     if (!userId || !creatorId || !subscriptionId) {
-      const response = {
+      return res.status(400).json({
         message: "Invalid request. Required data not provided.",
         result: {},
-      };
-      return res.sendStatus(400).json(response);
+      });
     }
+
     const makePayment = await subscribe(userId, creatorId, subscriptionId);
-    if (makePayment) {
-      const response = {
+
+    if (makePayment === "SUBSCRIBED") {
+      return res.status(200).json({
         message: "Subscription successful!",
         result: { makePayment },
-      };
-      return res.sendStatus(200).json(response);
+      });
+    } else if (makePayment === "ALREADYSUBSCRIBED") {
+      return res.status(301).json({
+        message: "Already Subscribed!",
+        result: {},
+      });
     } else {
-      const response = {
+      return res.status(400).json({
         message: "Something went wrong!",
         result: {},
-      };
-      return res.sendStatus(400).json(response);
+      });
     }
   } catch (error) {
-    const response = {
+    return res.status(500).json({
       message: "Internal server error!",
       result: { error },
-    };
-    return res.sendStatus(500).json(response);
+    });
   }
 };
+
 //==================================================Pay custom Amount===========================================================
-export const payCustomAmount = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const { requestId, userId, creatorId, subscriptionId } = req.body;
-    if (!requestId || !userId || !creatorId || subscriptionId) {
-      const response = {
-        message: "Invalid request. Required data not provided.",
-        result: {},
-      };
-      return res.sendStatus(400).json(response);
-    }
-    const makePayment = await customSubscribed(
-      requestId,
-      userId,
-      creatorId,
-      subscriptionId
-    );
-    if (makePayment) {
-      const response = {
-        message: "Request sent to creator.",
-        result: { makePayment },
-      };
-      return res.sendStatus(200).json(response);
-    } else {
-      const response = {
-        message: "Something went wrong!",
-        result: {},
-      };
-      return res.sendStatus(400).json(response);
-    }
-  } catch (error) {
-    const response = {
-      message: "Internal server error!",
-      result: { error },
-    };
-    return res.sendStatus(500).json(response);
-  }
-};
+// export const payCustomAmount = async (
+//   req: express.Request,
+//   res: express.Response
+// ) => {
+//   try {
+//     const { requestId, userId, creatorId, subscriptionId } = req.body;
+//     if (!requestId || !userId || !creatorId || subscriptionId) {
+//       const response = {
+//         message: "Invalid request. Required data not provided.",
+//         result: {},
+//       };
+//       return res.sendStatus(400).json(response);
+//     }
+//     const makePayment = await customSubscribed(
+//       requestId,
+//       userId,
+//       creatorId,
+//       subscriptionId
+//     );
+//     if (makePayment) {
+//       const response = {
+//         message: "Request sent to creator.",
+//         result: { makePayment },
+//       };
+//       return res.sendStatus(200).json(response);
+//     } else {
+//       const response = {
+//         message: "Something went wrong!",
+//         result: {},
+//       };
+//       return res.sendStatus(400).json(response);
+//     }
+//   } catch (error) {
+//     const response = {
+//       message: "Internal server error!",
+//       result: { error },
+//     };
+//     return res.sendStatus(500).json(response);
+//   }
+// };
 //==================================================Request custom subscription===========================================================
 export const requestCustomSub = async (
   req: express.Request,

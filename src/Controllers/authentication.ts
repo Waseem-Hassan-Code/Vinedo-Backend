@@ -12,9 +12,7 @@ import {
   updateUserPassword,
   UserModel,
 } from "../Model/users";
-import express, { response } from "express";
-import { ResponseDto } from "Model/response";
-import { json } from "body-parser";
+import express from "express";
 import { createToken } from "../Helpers/jwtTokens";
 import { sendEmail } from "../Helpers/nodeMailer";
 
@@ -150,7 +148,7 @@ export const register = async (req: express.Request, res: express.Response) => {
   }
 };
 
-//--------------------Forget and Update Password---------------
+//----------------------------Forget and Update Password--------------------------
 export const forgetPassword = async (
   req: express.Request,
   res: express.Response
@@ -167,23 +165,21 @@ export const forgetPassword = async (
 
   const existingUser = await getUserByEmail(email);
   if (!existingUser) {
-    const response: ResponseDto = {
-      status: 400,
+    const response = {
       message: "Email address not found!",
       result: {},
     };
-    return res.json(response);
+    return res.status(404).json(response);
   }
 
   const user = await getUserByEmail(email);
 
   if (!user) {
     const response = {
-      status: 400,
       message: "User not found.",
       result: {},
     };
-    return res.status(400).json(response);
+    return res.status(404).json(response);
   } else {
     const otp = generateOTP();
 
@@ -199,23 +195,21 @@ export const forgetPassword = async (
       otpStorage.set(email, { otp, expirationTime });
 
       const response = {
-        status: 200,
         message: "OTP sent successfully.",
-        result: { otp },
+        result: {},
       };
       return res.status(200).json(response);
     } catch (error) {
       const response = {
-        status: 500,
         message: "Email sending failed.",
         result: {},
       };
-      return res.json(response);
+      return res.status(500).json(response);
     }
   }
 };
 
-//------------------------------------------------------------------------------------------------------
+//-----------------------------------------------Verify OTP-----------------------------------------------
 export const verifyOTP = async (
   req: express.Request,
   res: express.Response
