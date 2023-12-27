@@ -7,7 +7,7 @@ import {
   getAllUserRequests,
   subscriptionsCount,
 } from "../Model/subscriptions";
-import { customSubscribed, subscribe } from "../Helpers/subscriptionBridge";
+import { subscribe } from "../Helpers/subscriptionBridge";
 import { findCreator } from "../Model/users";
 
 //==================================================Pay Normal Amount===========================================================
@@ -51,46 +51,46 @@ export const payNormalAmount = async (
 };
 
 //==================================================Pay custom Amount===========================================================
-export const payCustomAmount = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    const { requestId, userId, creatorId, subscriptionId } = req.body;
-    if (!requestId || !userId || !creatorId || subscriptionId) {
-      const response = {
-        message: "Invalid request. Required data not provided.",
-        result: {},
-      };
-      return res.sendStatus(400).json(response);
-    }
-    const makePayment = await customSubscribed(
-      requestId,
-      userId,
-      creatorId,
-      subscriptionId
-    );
-    if (makePayment) {
-      const response = {
-        message: "Request sent to creator.",
-        result: { makePayment },
-      };
-      return res.sendStatus(200).json(response);
-    } else {
-      const response = {
-        message: "Something went wrong!",
-        result: {},
-      };
-      return res.sendStatus(400).json(response);
-    }
-  } catch (error) {
-    const response = {
-      message: "Internal server error!",
-      result: { error },
-    };
-    return res.sendStatus(500).json(response);
-  }
-};
+// export const payCustomAmount = async (
+//   req: express.Request,
+//   res: express.Response
+// ) => {
+//   try {
+//     const { requestId, userId, creatorId, subscriptionId } = req.body;
+//     if (!requestId || !userId || !creatorId || subscriptionId) {
+//       const response = {
+//         message: "Invalid request. Required data not provided.",
+//         result: {},
+//       };
+//       return res.sendStatus(400).json(response);
+//     }
+//     const makePayment = await customSubscribed(
+//       requestId,
+//       userId,
+//       creatorId,
+//       subscriptionId
+//     );
+//     if (makePayment) {
+//       const response = {
+//         message: "Request sent to creator.",
+//         result: { makePayment },
+//       };
+//       return res.sendStatus(200).json(response);
+//     } else {
+//       const response = {
+//         message: "Something went wrong!",
+//         result: {},
+//       };
+//       return res.sendStatus(400).json(response);
+//     }
+//   } catch (error) {
+//     const response = {
+//       message: "Internal server error!",
+//       result: { error },
+//     };
+//     return res.sendStatus(500).json(response);
+//   }
+// };
 //==================================================Request custom subscription===========================================================
 export const requestCustomSub = async (
   req: express.Request,
