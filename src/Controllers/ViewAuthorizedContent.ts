@@ -81,9 +81,7 @@ export const getImages_User = async (
   res: express.Response
 ) => {
   try {
-    const userId = req.params.userId;
-    const creatorId = req.params.creatorId;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { userId, creatorId, page = 1, pageSize = 10 } = req.body;
 
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);
