@@ -1,9 +1,8 @@
 import { fileBucket } from "../Helpers/constants";
 import { UserModel } from "../Model/users";
 import express from "express";
-import { streamToBuffer } from "../Helpers";
-import { json } from "body-parser";
 import { creatorSubscriptionModel } from "../Model/creatorSubDetails";
+import { UserSubscriptionModel } from "../Model/subscriptions";
 
 //================================================GET Profile==================================================
 export const getProfilePicture = async (
@@ -119,6 +118,79 @@ export const getSubscriptionDetail = async (
       return res.status(200).json({
         message: "Creator Subscription Details Retrived",
         result: { user },
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+      result: {},
+    });
+  }
+};
+
+//=====================================Validate Subscription===================================
+
+export const subscriptionValidity = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { userId, creatorId, subscriptionId } = req.body;
+
+    if (!userId || !creatorId || !subscriptionId) {
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid request. 'userId' is required.",
+        result: {},
+      });
+    }
+
+    const sub = await UserSubscriptionModel.findOne({
+      userId: userId,
+      creatorId: creatorId,
+      subscriptionId: subscriptionId,
+    })
+      .select("isSubscribed isPayable expiryDate")
+      .lean()
+      .exec();
+
+    if (!sub) {
+      return res.status(404).json({
+        status: 404,
+        message: "User Subscription details not found.",
+        result: {},
+      });
+    } else if (
+      sub.isPayable === false &&
+      sub.isSubscribed === true &&
+      sub.expiryDate
+    ) {
+      const today: Date = new Date();
+
+      if (sub.expiryDate >= today) {
+        return res.status(200).json({
+          message: "User is Authorized to watch",
+          result: {},
+        });
+      } else {
+        const deleteSubscription = UserSubscriptionModel.deleteOne({
+          userId: userId,
+          creatorId: creatorId,
+          subscriptionId: subscriptionId,
+        });
+        if ((await deleteSubscription).deletedCount > 0) {
+          return res.status(403).json({
+            message: "Renew your subscription",
+            result: {},
+          });
+        }
+      }
+    } else {
+      return res.status(404).json({
+        status: 404,
+        message: "User is not authorized to watch",
+        result: {},
       });
     }
   } catch (error) {

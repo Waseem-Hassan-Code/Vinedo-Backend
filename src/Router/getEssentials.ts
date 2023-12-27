@@ -4,10 +4,16 @@ import {
   getCoverPicture,
   getProfilePicture,
   getSubscriptionDetail,
+  subscriptionValidity,
 } from "../Controllers/getUserEssentials";
 
 export default (router: express.Router) => {
   router.get("/userEssentials/getProfile", getProfilePicture);
   router.get("/userEssentials/getCover", getCoverPicture);
   router.get("/userEssentials/accountDetails", getSubscriptionDetail);
+  router.post(
+    "/userEssentials/validateSubscription",
+    authenticateToken,
+    subscriptionValidity
+  );
 };
