@@ -10,9 +10,7 @@ import {
 import { fileBucket } from "../Helpers/constants";
 import { authorizedUser } from "../Helpers/validateUser";
 import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
-import { streamToBuffer } from "../Helpers";
-import Hls from "hls.js";
-import { createReadStream } from "fs";
+import { commentsAggregate } from "../Model/Lookups/VideoComments";
 //====================================Get Videos Creato=========================================
 
 export const getVideosThumbNails_Creator = async (
@@ -345,25 +343,25 @@ export const LikenOnVid = async (
   res: express.Response
 ) => {
   try {
-    const { imageId } = req.body;
+    const { videoId } = req.body;
 
-    if (!imageId) {
+    if (!videoId) {
       return res.status(400).json({
         message: "Cannot counts likes on provide videoId.",
         result: {},
       });
     }
 
-    const result = await likesOnVideo(imageId);
+    const result = await likesOnVideo(videoId);
 
     if (result) {
-      console.log(`Video liked by ${imageId}`);
+      console.log(`Video liked by ${videoId}`);
       return res.status(200).json({
         message: "Video total likes.",
         result: { result },
       });
     } else {
-      console.log(`Video disliked by ${imageId}`);
+      console.log(`Video disliked by ${videoId}`);
       return res.status(400).json({
         message: "could not retrived likes.",
         result: { result },
@@ -374,6 +372,46 @@ export const LikenOnVid = async (
     return res.status(500).json({
       message: "Internal Server Error",
       result: { error: error.message },
+    });
+  }
+};
+//====================================Get Video Comments============================================
+
+export const getAllComments = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { videoId, page, pageSize } = req.body;
+
+    if (!videoId) {
+      return res.status(400).json({
+        message: "VideoId not provided.",
+        result: {},
+      });
+    }
+
+    const parsedPage = parseInt(page, 10) || 1;
+    const parsedPageSize = parseInt(pageSize, 10) || 10;
+
+    const result = await commentsAggregate(
+      videoId.toString(),
+      parsedPage,
+      parsedPageSize
+    );
+
+    if (result) {
+      return res.status(200).json({
+        status: "success",
+        message: "Video comments loaded successfully.",
+        data: { comments: result },
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+      data: { error: error.message },
     });
   }
 };

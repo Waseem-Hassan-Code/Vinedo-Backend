@@ -4,6 +4,7 @@ import {
   LikeDislikeVideos,
   LikenOnVid,
   delete_A_Comment,
+  getAllComments,
   getSingleVideo,
   getVideosThumbNails_Creator,
   postComment,
@@ -17,6 +18,7 @@ export default (router: express.Router) => {
     getVideosThumbNails_Creator
   );
   router.get("/video/getSingleVideo", authenticateToken, getSingleVideo);
+  router.post("/video/getVideoComments", authenticateToken, getAllComments);
   router.post("/video/postComments", authenticateToken, postComment);
   router.get("/video/deleteComments", authenticateToken, delete_A_Comment);
   router.post("/video/updateComments", authenticateToken, update_A_Comment);

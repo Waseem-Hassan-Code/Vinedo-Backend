@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  ImageCommentsModel,
   addComment,
   deleteComment,
   updateComment,
@@ -11,6 +10,7 @@ import { fileBucket, fileStorage } from "../Helpers/constants";
 import { getComments } from "../Model/videoComments";
 import { likeOrDislikeImage, likesOnImage } from "../Model/ImageLikes";
 import { streamToBuffer } from "../Helpers";
+import { commentsAggregate } from "../Model/Lookups/ImageComments";
 
 //===============================================Get all images========================================
 
@@ -277,6 +277,46 @@ export const LikenOnImg = async (
     return res.status(500).json({
       message: "Internal Server Error",
       result: { error: error.message },
+    });
+  }
+};
+//======================================Get ALL Cooments===================================================
+
+export const getAllComments = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { videoId, page, pageSize } = req.body;
+
+    if (!videoId) {
+      return res.status(400).json({
+        message: "VideoId not provided.",
+        result: {},
+      });
+    }
+
+    const parsedPage = parseInt(page, 10) || 1;
+    const parsedPageSize = parseInt(pageSize, 10) || 10;
+
+    const result = await commentsAggregate(
+      videoId.toString(),
+      parsedPage,
+      parsedPageSize
+    );
+
+    if (result) {
+      return res.status(200).json({
+        status: "success",
+        message: "Video comments loaded successfully.",
+        data: { comments: result },
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+      data: { error: error.message },
     });
   }
 };
