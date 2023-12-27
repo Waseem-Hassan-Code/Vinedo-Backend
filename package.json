@@ -62,7 +62,6 @@
     "sharp": "^0.33.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "ts-node": "^10.9.1",
-    "video-stitch": "^1.7.1"
+    "ts-node": "^10.9.1"
   }
 }
