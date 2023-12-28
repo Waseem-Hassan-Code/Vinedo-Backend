@@ -1,17 +1,15 @@
 import express from "express";
 import { findVideo, getAllVideosPaginated } from "../Model/videos";
 import {
-  VideoCommentsModel,
   addComment,
   deleteComment,
-  getComments,
   updateComment,
 } from "../Model/videoComments";
 import { fileBucket } from "../Helpers/constants";
-import { authorizedUser } from "../Helpers/validateUser";
 import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { commentsAggregate } from "../Model/Lookups/VideoComments";
-import { sign } from "jsonwebtoken";
+import { parseRange } from "../Helpers/ParseStreamRange";
+import { authorizedUser } from "../Helpers/validateUser";
 //====================================Get Videos Thumbnails Creator=========================================
 
 export const getVideosThumbNails_Creator_ = async (
@@ -19,66 +17,67 @@ export const getVideosThumbNails_Creator_ = async (
   res: express.Response
 ) => {
   try {
-    const { creatorId, page = 1, pageSize = 10 } = req.body;
+    const { videoId, creatorId } = req.query;
 
-    const pageNumber = Number(page);
-    const pageSizeNumber = Number(pageSize);
-
-    if (
-      isNaN(pageNumber) ||
-      isNaN(pageSizeNumber) ||
-      pageNumber <= 0 ||
-      pageSizeNumber <= 0
-    ) {
+    if (!videoId || !creatorId) {
       return res.status(400).json({
-        message: "Invalid page or pageSize parameters.",
-        result: [],
+        message: "Invalid or missing videoId or creatorId parameters.",
+        result: {},
       });
     }
 
-    if (!creatorId) {
+    const video = await findVideo(videoId.toString(), creatorId.toString());
+
+    if (!video) {
       return res.status(404).json({
-        message: "Videos not found.",
-        result: [],
-      });
-    }
-    const isAuthorized = await authorizedUser(creatorId.toString());
-
-    if (!isAuthorized) {
-      return res.status(403).json({
-        message: "You are not authorized to access this content.",
-        result: [],
+        message: "Video not found.",
+        result: {},
       });
     }
 
-    const skip = (pageNumber - 1) * pageSizeNumber;
-    const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
+    const file = fileBucket.file(video.fileName);
 
-    const videoArray = [];
-    for (const video of videos) {
-      const thumbnailPath = video.thumbnailName;
-      const file = fileBucket.file(thumbnailPath);
-      const readStream = file.createReadStream();
+    const metadata = await file.getMetadata();
+    const fileSize = metadata[0].size;
 
-      videoArray.push({
+    const rangeHeader = req.headers.range;
+    if (rangeHeader) {
+      const rangeRequest = parseRange(<number>fileSize, rangeHeader);
+      res.status(206);
+      res.set({
+        "Content-Range": `bytes ${rangeRequest[0].start}-${rangeRequest[0].end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": rangeRequest[0].end - rangeRequest[0].start + 1,
+        "Content-Type": "video/mp4",
+      });
+
+      file
+        .createReadStream({
+          start: rangeRequest[0].start,
+          end: rangeRequest[0].end,
+        })
+        .pipe(res);
+    } else {
+      res.set({
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      });
+
+      file.createReadStream().pipe(res);
+    }
+
+    res.write(
+      JSON.stringify({
         videoId: video._id,
         title: video.title,
-      });
-
-      readStream.pipe(res, { end: false });
-    }
-
-    res.status(200).json({
-      message: "Videos retrieved successfully.",
-      result: videoArray,
-    });
-
-    res.end();
+        description: video.description,
+      })
+    );
   } catch (error) {
-    console.error("Error retrieving videos:", error);
+    console.error("Error:", error);
     return res.status(500).json({
       message: "Internal Server Error",
-      result: [],
+      result: {},
     });
   }
 };
