@@ -4,6 +4,7 @@ import { fileBucket } from "../Helpers/constants";
 import { getComments } from "../Model/videoComments";
 import { getAllImagesPaginated } from "../Model/images";
 import { streamToBuffer } from "../Helpers";
+import { parseRange } from "../Helpers/ParseStreamRange";
 
 //==============================GET VIDEOS THUMBNAILS=================================
 export const getVideosThumbnails_User = async (
@@ -66,7 +67,8 @@ export const getVideosThumbnails_User = async (
     });
   }
 };
-//==============================GET VIDEOS THUMBNAILS============================
+
+//=============================VIDEO STREAM=================================
 export const getVideoStream_User = async (
   req: express.Request,
   res: express.Response
@@ -92,10 +94,34 @@ export const getVideoStream_User = async (
 
     const file = fileBucket.file(video.fileName);
 
-    res.setHeader("Content-Type", "video/mp4");
-    res.setHeader("Accept-Ranges", "bytes");
+    const metadata = await file.getMetadata();
+    const fileSize = metadata[0].size;
 
-    const readStream = file.createReadStream();
+    const rangeHeader = req.headers.range;
+    if (rangeHeader) {
+      const rangeRequest = parseRange(<number>fileSize, rangeHeader);
+      res.status(206);
+      res.set({
+        "Content-Range": `bytes ${rangeRequest[0].start}-${rangeRequest[0].end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": rangeRequest[0].end - rangeRequest[0].start + 1,
+        "Content-Type": "video/mp4",
+      });
+
+      file
+        .createReadStream({
+          start: rangeRequest[0].start,
+          end: rangeRequest[0].end,
+        })
+        .pipe(res);
+    } else {
+      res.set({
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      });
+
+      file.createReadStream().pipe(res);
+    }
 
     res.write(
       JSON.stringify({
@@ -104,39 +130,6 @@ export const getVideoStream_User = async (
         description: video.description,
       })
     );
-
-    readStream.on("open", () => {
-      const range = req.headers.range;
-
-      if (range) {
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1]
-          ? parseInt(parts[1], 10)
-          : (typeof file.metadata.size === "number" ? file.metadata.size : -1) -
-            1;
-
-        const chunkSize = end - start + 1;
-        console.log(chunkSize);
-
-        res.writeHead(206, {
-          "Content-Range": `bytes ${start}-${end}/${file.metadata.size}`,
-          "Content-Length": chunkSize,
-        });
-
-        readStream.pipe(res, { end: false });
-      } else {
-        res.setHeader("Content-Length", file.metadata.size);
-        readStream.pipe(res);
-      }
-    });
-
-    res.write("\n");
-
-    readStream.on("error", (error) => {
-      console.error("Error streaming video:", error);
-      res.status(500).end();
-    });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({
@@ -145,6 +138,7 @@ export const getVideoStream_User = async (
     });
   }
 };
+
 //====================================GET IMAGES=================================
 
 export const getImages_User = async (
