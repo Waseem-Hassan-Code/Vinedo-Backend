@@ -191,6 +191,156 @@ const sendInternalError = (res: express.Response) => {
 
 // ================================upload Video==================================
 
+export const uploadNewVideoV2 = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { title, description, creatorId } = req.body;
+    const videoFile = req.file;
+
+    if (
+      !title ||
+      !description ||
+      !creatorId ||
+      !videoFile ||
+      !videoFile.originalname
+    ) {
+      const response = {
+        message: "Failed to upload video. Something is missing.",
+        result: {},
+      };
+      return res.status(400).json(response);
+    }
+
+    const isAuthorized = await authorizedUser(creatorId);
+    if (!isAuthorized) {
+      const response = {
+        message: "You are not authorized to upload a video.",
+        result: {},
+      };
+      return res.status(403).json(response);
+    }
+
+    const timestamp = Date.now();
+    const videoName = `${timestamp}_${secretKey}_${videoFile.originalname.replace(
+      /\s/g,
+      ""
+    )}`;
+    const tempFilePath = path.join(__dirname, "..", "Temp", videoName);
+
+    const thumbnailName = `${videoName.replace(/\s/g, "")}_thumbnail.png`;
+
+    const tempScreenShotPath = path.join(
+      __dirname,
+      "..",
+      "Temp",
+      thumbnailName
+    );
+
+    if (!fs.existsSync(path.dirname(tempFilePath))) {
+      fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
+    }
+
+    fs.writeFileSync(tempFilePath, videoFile.buffer);
+
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    new ffmpeg(tempFilePath).takeScreenshots(
+      {
+        filename: thumbnailName,
+        count: 1,
+        timemarks: ["6"],
+      },
+      path.dirname(tempScreenShotPath)
+    );
+
+    const blobVideo = fileBucket.file(videoName);
+    const blobStreamVideo = blobVideo.createWriteStream();
+
+    const blobStreamThumbnail = fileBucket
+      .file(thumbnailName)
+      .createWriteStream();
+
+    const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
+    const thumbnailUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${thumbnailName}`;
+
+    blobStreamVideo.on("finish", async () => {
+      try {
+        fs.unlinkSync(tempFilePath);
+        blobStreamThumbnail.on("finish", async () => {
+          try {
+            await addVideo({
+              title,
+              description,
+              fileName: videoName,
+              url: videoUrl,
+              thumbnailName,
+              thumbnailUrl,
+              postDate: timestamp,
+              creatorId,
+            });
+
+            const response = {
+              message: "Video uploaded successfully.",
+              result: {},
+            };
+            return res.status(200).json(response);
+          } catch (error) {
+            console.error("Error in thumbnail upload:", error);
+            return res.status(500).json({
+              status: 500,
+              message: "Internal Server Error",
+              result: {},
+            });
+          }
+        });
+
+        blobStreamThumbnail.on("error", (error) => {
+          console.error("Error in blobStreamThumbnail:", error);
+          return res.status(500).json({
+            status: 500,
+            message: "Internal Server Error",
+            result: {},
+          });
+        });
+
+        blobStreamThumbnail.end(() => {
+          try {
+            fs.unlinkSync(tempScreenShotPath);
+            console.log("File removed");
+          } catch (error) {
+            console.log("Error in File removal");
+            throw error;
+          }
+        });
+      } catch (error) {
+        console.error("Error in video upload:", error);
+        return res.status(500).json({
+          status: 500,
+          message: "Internal Server Error",
+          result: {},
+        });
+      }
+    });
+
+    blobStreamVideo.on("error", (error) => {
+      console.error("Error in blobStreamVideo:", error);
+      return res
+        .status(500)
+        .json({ status: 500, message: "Internal Server Error", result: {} });
+    });
+
+    blobStreamVideo.end(fs.readFileSync(tempFilePath));
+  } catch (error) {
+    console.error("Error in uploadNewVideo:", error);
+    return res
+      .status(500)
+      .json({ status: 500, message: "Internal Server Error", result: {} });
+  }
+};
+
+//==============================================================================
 export const uploadNewVideo = async (
   req: express.Request,
   res: express.Response
@@ -248,19 +398,15 @@ export const uploadNewVideo = async (
 
     new ffmpeg(tempFilePath).takeScreenshots(
       {
-        filename: "Pic" + Date.now(),
+        filename: thumbnailName,
         count: 1,
         timemarks: ["6"],
       },
-      tempScreenShotPath
+      path.dirname(tempScreenShotPath)
     );
 
     const blobVideo = fileBucket.file(videoName);
     const blobStreamVideo = blobVideo.createWriteStream();
-
-    const blobStreamThumbnail = fileBucket
-      .file(thumbnailName)
-      .createWriteStream();
 
     const videoUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${videoName}`;
     const thumbnailUrl = `${process.env.GOOGLE_STORAGE_BASE_URL}${fileBucket.name}/${thumbnailName}`;
@@ -268,52 +414,43 @@ export const uploadNewVideo = async (
     blobStreamVideo.on("finish", async () => {
       try {
         fs.unlinkSync(tempFilePath);
-        blobStreamThumbnail.on("finish", async () => {
-          try {
-            await addVideo({
-              title,
-              description,
-              fileName: videoName,
-              url: videoUrl,
-              thumbnailName,
-              thumbnailUrl,
-              postDate: timestamp,
-              creatorId,
-            });
 
-            const response = {
-              message: "Video uploaded successfully.",
-              result: {},
-            };
-            return res.status(200).json(response);
-          } catch (error) {
-            console.error("Error in thumbnail upload:", error);
-            return res.status(500).json({
-              status: 500,
-              message: "Internal Server Error",
-              result: {},
-            });
-          }
+        await fileBucket.upload(tempScreenShotPath, {
+          destination: thumbnailName,
         });
 
-        blobStreamThumbnail.on("error", (error) => {
-          console.error("Error in blobStreamThumbnail:", error);
+        try {
+          fs.unlinkSync(tempScreenShotPath);
+          console.log("Thumbnail file removed locally");
+        } catch (error) {
+          console.log("Error removing thumbnail file locally:", error);
+        }
+
+        try {
+          await addVideo({
+            title,
+            description,
+            fileName: videoName,
+            url: videoUrl,
+            thumbnailName,
+            thumbnailUrl,
+            postDate: timestamp,
+            creatorId,
+          });
+
+          const response = {
+            message: "Video uploaded successfully.",
+            result: {},
+          };
+          return res.status(200).json(response);
+        } catch (error) {
+          console.error("Error in thumbnail upload:", error);
           return res.status(500).json({
             status: 500,
             message: "Internal Server Error",
             result: {},
           });
-        });
-
-        blobStreamThumbnail.end(() => {
-          fs.rmdir(thumbnailName, { recursive: true }, (error) => {
-            if (error) {
-              console.error("Error deleting folder:", error);
-            } else {
-              console.log("Folder deleted successfully.");
-            }
-          });
-        });
+        }
       } catch (error) {
         console.error("Error in video upload:", error);
         return res.status(500).json({

@@ -108,10 +108,8 @@ async function executePayPalPayouts(senderBatchId: string, items: any[]) {
   }
 }
 
-// Function to initiate the payment process
 export async function initiatePayment(creatorId: string) {
   try {
-    // Retrieve seller and admin emails from the database
     const sellerDetails = await getCreatorSubscriptioDetails(creatorId);
 
     const sellerEmail = sellerDetails.payPalEmail;
@@ -121,13 +119,11 @@ export async function initiatePayment(creatorId: string) {
       throw new Error("Seller email not found.");
     }
 
-    // Calculate split amounts
     const { sellerAmount, adminAmount } = await calculateSplitPayments(
       totalAmount,
       creatorId
     );
 
-    // Prepare items for PayPal Payouts
     const items = [
       {
         recipient_type: "EMAIL",
@@ -149,13 +145,8 @@ export async function initiatePayment(creatorId: string) {
       },
     ];
 
-    // Execute PayPal Payouts
     await executePayPalPayouts(`${Date.now()}-payouts`, items);
   } catch (error) {
     console.error("Error initiating payment:", error.message);
   }
 }
-
-//initiatePayment(creatorId);
-
-//================================================================================================

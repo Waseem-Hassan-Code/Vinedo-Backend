@@ -11,15 +11,14 @@ import { fileBucket } from "../Helpers/constants";
 import { authorizedUser } from "../Helpers/validateUser";
 import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { commentsAggregate } from "../Model/Lookups/VideoComments";
-//====================================Get Videos Creato=========================================
+//====================================Get Videos Thumbnails Creator=========================================
 
 export const getVideosThumbNails_Creator = async (
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    const creatorId = req.params.creatorId;
-    const { page = 1, pageSize = 10 } = req.query;
+    const { creatorId, page = 1, pageSize = 10 } = req.body;
 
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);
@@ -43,8 +42,7 @@ export const getVideosThumbNails_Creator = async (
         result: [],
       });
     }
-
-    const isAuthorized = await authorizedUser(creatorId);
+    const isAuthorized = await authorizedUser(creatorId.toString());
 
     if (!isAuthorized) {
       return res.status(403).json({
@@ -56,30 +54,25 @@ export const getVideosThumbNails_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
-    res.status(200).json({
-      message: "Videos retrieved successfully.",
-      result: [],
-    });
-
+    const videoArray = [];
     // Stream each video
     for (const video of videos) {
       const videoPath = video.thumbnailName;
       const file = fileBucket.file(videoPath);
-      const comments = await getComments(video._id.toString());
       const readStream = file.createReadStream();
 
-      res.write(
-        JSON.stringify({
-          videoId: video._id,
-          title: video.title,
-          comments,
-        })
-      );
+      videoArray.push({
+        videoId: video._id,
+        title: video.title,
+      });
 
       readStream.pipe(res, { end: false });
-
-      res.write("\n");
     }
+
+    res.status(200).json({
+      message: "Videos retrieved successfully.",
+      result: videoArray,
+    });
 
     res.end();
   } catch (error) {

@@ -12,8 +12,8 @@ import {
 } from "../Controllers/videos";
 
 export default (router: express.Router) => {
-  router.get(
-    "/video/getVideoThumbnails_Creator/:creatorId",
+  router.post(
+    "/video/getVideoThumbnails_Creator",
     authenticateToken,
     getVideosThumbNails_Creator
   );

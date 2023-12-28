@@ -4,7 +4,7 @@ import express from "express";
 import { creatorSubscriptionModel } from "../Model/creatorSubDetails";
 import { UserSubscriptionModel } from "../Model/subscriptions";
 
-//================================================GET Profile==================================================
+//================================================GET PROFILE==================================================
 export const getProfilePicture = async (
   req: express.Request,
   res: express.Response
