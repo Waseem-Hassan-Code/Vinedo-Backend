@@ -11,9 +11,10 @@ import { fileBucket } from "../Helpers/constants";
 import { authorizedUser } from "../Helpers/validateUser";
 import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { commentsAggregate } from "../Model/Lookups/VideoComments";
+import { sign } from "jsonwebtoken";
 //====================================Get Videos Thumbnails Creator=========================================
 
-export const getVideosThumbNails_Creator = async (
+export const getVideosThumbNails_Creator_ = async (
   req: express.Request,
   res: express.Response
 ) => {
@@ -23,7 +24,6 @@ export const getVideosThumbNails_Creator = async (
     const pageNumber = Number(page);
     const pageSizeNumber = Number(pageSize);
 
-    // Validate page and pageSize
     if (
       isNaN(pageNumber) ||
       isNaN(pageSizeNumber) ||
@@ -55,10 +55,9 @@ export const getVideosThumbNails_Creator = async (
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
     const videoArray = [];
-    // Stream each video
     for (const video of videos) {
-      const videoPath = video.thumbnailName;
-      const file = fileBucket.file(videoPath);
+      const thumbnailPath = video.thumbnailName;
+      const file = fileBucket.file(thumbnailPath);
       const readStream = file.createReadStream();
 
       videoArray.push({
@@ -73,6 +72,67 @@ export const getVideosThumbNails_Creator = async (
       message: "Videos retrieved successfully.",
       result: videoArray,
     });
+
+    res.end();
+  } catch (error) {
+    console.error("Error retrieving videos:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      result: [],
+    });
+  }
+};
+//========================================================================================================
+
+export const getVideosThumbNails_Creator = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  try {
+    const { creatorId, page = 1, pageSize = 10 } = req.body;
+
+    const pageNumber = Number(page);
+    const pageSizeNumber = Number(pageSize);
+
+    if (
+      isNaN(pageNumber) ||
+      isNaN(pageSizeNumber) ||
+      pageNumber <= 0 ||
+      pageSizeNumber <= 0
+    ) {
+      return res.status(400).json({
+        message: "Invalid page or pageSize parameters.",
+        result: [],
+      });
+    }
+
+    if (!creatorId) {
+      return res.status(404).json({
+        message: "Videos not found.",
+        result: [],
+      });
+    }
+    const isAuthorized = await authorizedUser(creatorId.toString());
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        message: "You are not authorized to access this content.",
+        result: [],
+      });
+    }
+
+    const skip = (pageNumber - 1) * pageSizeNumber;
+    const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
+
+    res.setHeader("Content-Type", "image/png");
+
+    for (const video of videos) {
+      const thumbnailPath = video.thumbnailName;
+      const file = fileBucket.file(thumbnailPath);
+      const readStream = file.createReadStream();
+
+      readStream.pipe(res, { end: false });
+    }
 
     res.end();
   } catch (error) {
