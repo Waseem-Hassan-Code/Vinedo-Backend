@@ -104,7 +104,7 @@ export const getSubscriptionDetail = async (
 
     const user = await creatorSubscriptionModel
       .findOne({ creatorId: id })
-      .select("subscriptionPrice payPalEmail")
+      .select("_id subscriptionPrice payPalEmail")
       .lean()
       .exec();
 

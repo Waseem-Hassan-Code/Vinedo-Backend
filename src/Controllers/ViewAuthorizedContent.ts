@@ -74,7 +74,7 @@ export const getVideoStream_User = async (
   res: express.Response
 ) => {
   try {
-    const { videoId, creatorId } = req.query;
+    const { videoId, creatorId } = req.body;
 
     if (!videoId || !creatorId) {
       return res.status(400).json({
