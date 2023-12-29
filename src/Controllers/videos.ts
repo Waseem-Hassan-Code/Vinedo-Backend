@@ -10,6 +10,7 @@ import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { commentsAggregate } from "../Model/Lookups/VideoComments";
 import { parseRange } from "../Helpers/ParseStreamRange";
 import { authorizedUser } from "../Helpers/validateUser";
+import { streamToBuffer } from "../Helpers";
 //====================================Get Videos Thumbnails Creator=========================================
 
 export const getVideosThumbNails_Creator_ = async (
@@ -111,6 +112,7 @@ export const getVideosThumbNails_Creator = async (
         result: [],
       });
     }
+
     const isAuthorized = await authorizedUser(creatorId.toString());
 
     if (!isAuthorized) {
@@ -123,17 +125,25 @@ export const getVideosThumbNails_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
-    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=frame");
 
     for (const video of videos) {
       const thumbnailPath = video.thumbnailName;
       const file = fileBucket.file(thumbnailPath);
       const readStream = file.createReadStream();
 
-      readStream.pipe(res, { end: false });
+      res.write("--frame\r\n");
+      res.write(`Content-Type: image/png\r\n`);
+      res.write(`Content-Id: ${video._id}\r\n\r\n`);
+
+      await new Promise((resolve) => {
+        readStream.pipe(res, { end: false });
+        readStream.on("end", resolve);
+      });
+      res.write("\r\n");
     }
 
-    res.end();
+    res.end("--frame--");
   } catch (error) {
     console.error("Error retrieving videos:", error);
     return res.status(500).json({

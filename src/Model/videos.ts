@@ -25,13 +25,6 @@ const VideoShema = new mongoose.Schema({
 
 export const VideoModel = mongoose.model("videos", VideoShema);
 
-export const findVideo = async (videoId: string, creatorId: string) => {
-  return await VideoModel.findOne({
-    _id: videoId,
-    creatorId: creatorId,
-  });
-};
-
 export const getAllVideosPaginated = async (
   creatorId: string,
   skip: number,
@@ -40,7 +33,15 @@ export const getAllVideosPaginated = async (
   return VideoModel.find({ creatorId: creatorId })
     .sort({ postDate: -1 })
     .skip(skip)
-    .limit(pageSize);
+    .limit(pageSize)
+    .lean();
+};
+
+export const findVideo = async (videoId: string, creatorId: string) => {
+  return await VideoModel.findOne({
+    _id: videoId,
+    creatorId: creatorId,
+  });
 };
 
 export const addVideo = (values: Record<string, any>) => {

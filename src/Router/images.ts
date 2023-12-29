@@ -19,7 +19,7 @@ export default (router: express.Router) => {
     authenticateToken,
     getImages_Creator
   );
-  router.post("images/getAllComments", authenticateToken, getAllComments);
+  router.post("/images/getAllComments", authenticateToken, getAllComments);
   router.post("/image/imageLikeDislike", authenticateToken, LikeDislikeImages);
   router.post("/image/imageLikeCount", authenticateToken, LikenOnImg);
 };

@@ -288,10 +288,9 @@ export const getAllComments = async (
 ) => {
   try {
     const { imageId, page, pageSize } = req.body;
-
     if (!imageId) {
       return res.status(400).json({
-        message: "VideoId not provided.",
+        message: "imageId not provided.",
         result: {},
       });
     }
@@ -308,7 +307,7 @@ export const getAllComments = async (
     if (result) {
       return res.status(200).json({
         status: "success",
-        message: "Video comments loaded successfully.",
+        message: "Image comments loaded successfully.",
         data: { comments: result },
       });
     }
