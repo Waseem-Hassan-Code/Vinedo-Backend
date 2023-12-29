@@ -287,9 +287,9 @@ export const getAllComments = async (
   res: express.Response
 ) => {
   try {
-    const { videoId, page, pageSize } = req.body;
+    const { imageId, page, pageSize } = req.body;
 
-    if (!videoId) {
+    if (!imageId) {
       return res.status(400).json({
         message: "VideoId not provided.",
         result: {},
@@ -300,7 +300,7 @@ export const getAllComments = async (
     const parsedPageSize = parseInt(pageSize, 10) || 10;
 
     const result = await commentsAggregate(
-      videoId.toString(),
+      imageId.toString(),
       parsedPage,
       parsedPageSize
     );

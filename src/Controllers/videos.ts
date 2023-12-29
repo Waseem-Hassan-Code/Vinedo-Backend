@@ -81,7 +81,7 @@ export const getVideosThumbNails_Creator_ = async (
     });
   }
 };
-//========================================================================================================
+//=========================================THUMBNAILS API==============================================
 
 export const getVideosThumbNails_Creator = async (
   req: express.Request,
