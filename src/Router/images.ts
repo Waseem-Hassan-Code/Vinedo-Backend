@@ -8,7 +8,7 @@ import {
   postComment,
   update_A_Comment,
 } from "../Controllers/images";
-import { getAllComments } from "Controllers/videos";
+import { getAllComments } from "../Controllers/images";
 
 export default (router: express.Router) => {
   router.post("/image/postComments", authenticateToken, postComment);
