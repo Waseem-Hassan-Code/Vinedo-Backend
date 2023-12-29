@@ -8,6 +8,7 @@ import {
   postComment,
   update_A_Comment,
 } from "../Controllers/images";
+import { getAllComments } from "Controllers/videos";
 
 export default (router: express.Router) => {
   router.post("/image/postComments", authenticateToken, postComment);
@@ -18,6 +19,7 @@ export default (router: express.Router) => {
     authenticateToken,
     getImages_Creator
   );
+  router.post("images/getAllComments", authenticateToken, getAllComments);
   router.post("/image/imageLikeDislike", authenticateToken, LikeDislikeImages);
   router.post("/image/imageLikeCount", authenticateToken, LikenOnImg);
 };
