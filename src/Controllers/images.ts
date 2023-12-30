@@ -291,7 +291,7 @@ export const getAllComments = async (
 
     if (!imageId) {
       return res.status(400).json({
-        message: "VideoId not provided.",
+        message: "ImageId not provided.",
         result: {},
       });
     }
