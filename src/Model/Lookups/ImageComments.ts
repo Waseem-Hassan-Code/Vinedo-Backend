@@ -1,41 +1,33 @@
-import { UserModel } from "../users";
 import { ImageCommentsModel } from "../imageComments";
+import { UserModel } from "../users";
 
 export const commentsAggregate = async (
   imageId: string,
   page = 1,
   pageSize = 10
 ) => {
-  const skip = (page - 1) * pageSize;
-
-  const aggregateQuery = [
-    {
-      $lookup: {
-        from: "imagecomments",
-        localField: "_id",
-        foreignField: "userId",
-        as: "comments",
-      },
-    },
-    {
-      $match: {
-        "comments.imageId": imageId,
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        comment: 1,
-        imageId: 1,
-        userId: 1,
-        "comments.name": 1,
-      },
-    },
-  ];
-
   try {
-    const result = await UserModel.aggregate(aggregateQuery).exec();
-    return result;
+    const skip = (page - 1) * pageSize;
+
+    const comments = await ImageCommentsModel.find({ imageId: imageId })
+      .skip(skip)
+      .limit(pageSize)
+      .exec();
+
+    const commentsObject = await Promise.all(
+      comments.map(async (comment) => {
+        const user = await UserModel.findById(comment.userId);
+
+        return {
+          _id: comment._id,
+          comment: comment.comment,
+          userIdName: user ? user.name : "",
+          imageId: comment.imageId,
+        };
+      })
+    );
+
+    return commentsObject;
   } catch (error) {
     console.error(`Error in commentsAggregate for ImageId ${imageId}:`, error);
     throw error;
