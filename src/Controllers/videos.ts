@@ -10,6 +10,8 @@ import { likeOrDislikeVideo, likesOnVideo } from "../Model/videoLikes";
 import { commentsAggregate } from "../Model/Lookups/VideoComments";
 import { parseRange } from "../Helpers/ParseStreamRange";
 import { authorizedUser } from "../Helpers/validateUser";
+import { streamToBuffer } from "../Helpers";
+
 //====================================Get Videos Thumbnails Creator=========================================
 
 export const getVideosThumbNails_Creator_ = async (
@@ -107,7 +109,7 @@ export const getVideosThumbNails_Creator = async (
 
     if (!creatorId) {
       return res.status(404).json({
-        message: "Videos not found.",
+        message: "Creator ID is required.",
         result: [],
       });
     }
@@ -124,25 +126,27 @@ export const getVideosThumbNails_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
-    res.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=frame");
+    const formattedThumbnails = await Promise.all(
+      videos.map(async (video) => {
+        const imagePath = video.fileName;
+        const file = fileBucket.file(imagePath);
+        const readStream = file.createReadStream();
 
-    for (const video of videos) {
-      const thumbnailPath = video.thumbnailName;
-      const file = fileBucket.file(thumbnailPath);
-      const readStream = file.createReadStream();
+        const buffer = await streamToBuffer(readStream);
 
-      res.write("--frame\r\n");
-      res.write(`Content-Type: image/png\r\n`);
-      res.write(`Content-Id: ${video._id}\r\n\r\n`);
+        return {
+          videoId: video._id,
+          title: video.title,
+          description: video.description,
+          ThumbnailData: buffer.toString("base64"),
+        };
+      })
+    );
 
-      await new Promise((resolve) => {
-        readStream.pipe(res, { end: false });
-        readStream.on("end", resolve);
-      });
-      res.write("\r\n");
-    }
-
-    res.end("--frame--");
+    return res.status(200).json({
+      message: "Images retrieved successfully.",
+      result: formattedThumbnails,
+    });
   } catch (error) {
     console.error("Error retrieving videos:", error);
     return res.status(500).json({

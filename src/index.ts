@@ -7,8 +7,6 @@ import cors from "cors";
 import mongoose from "mongoose";
 import router from "./Router";
 import path from "path";
-import { initiatePayment } from "./Helpers/payPayIntegration";
-import { UserModel } from "Model/users";
 
 const app = express();
 

@@ -47,7 +47,6 @@ export const getImages_Creator = async (
     const formattedImages = await Promise.all(
       images.map(async (image) => {
         const imagePath = image.fileName;
-        const comments = await getComments(image._id.toString());
         const file = fileBucket.file(imagePath);
         const readStream = file.createReadStream();
 
@@ -57,7 +56,6 @@ export const getImages_Creator = async (
           imageId: image._id,
           title: image.title,
           description: image.description,
-          comments,
           imageData: buffer.toString("base64"),
         };
       })

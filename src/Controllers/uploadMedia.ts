@@ -405,6 +405,11 @@ export const uploadNewVideo = async (
       path.dirname(tempScreenShotPath)
     );
 
+    // const compressedBuffer = await sharp()
+    // .resize({ width: 800 }) // Adjust the width as needed
+    // .jpeg({ quality: 80 }) // Adjust the quality as needed
+    // .toBuffer();
+
     const blobVideo = fileBucket.file(videoName);
     const blobStreamVideo = blobVideo.createWriteStream();
 
