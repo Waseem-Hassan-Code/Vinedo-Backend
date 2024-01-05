@@ -7,10 +7,9 @@ import {
 import { authorizedUser } from "../Helpers/validateUser";
 import { getAllImagesPaginated } from "../Model/images";
 import { fileBucket, fileStorage } from "../Helpers/constants";
-import { getComments } from "../Model/videoComments";
 import { likeOrDislikeImage, likesOnImage } from "../Model/ImageLikes";
-import { streamToBuffer } from "../Helpers";
 import { commentsAggregate } from "../Model/Lookups/ImageComments";
+import io from "../Socket/index";
 
 //===============================================Get all images========================================
 
@@ -44,26 +43,26 @@ export const getImages_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const images = await getAllImagesPaginated(creatorId, skip, pageSizeNumber);
 
-    const formattedImages = await Promise.all(
-      images.map(async (image) => {
+    for (const image of images) {
+      try {
         const imagePath = image.fileName;
         const file = fileBucket.file(imagePath);
         const readStream = file.createReadStream();
 
-        const buffer = await streamToBuffer(readStream);
-
-        return {
-          imageId: image._id,
+        io.emit("images", {
+          videoId: image._id,
           title: image.title,
           description: image.description,
-          imageData: buffer.toString("base64"),
-        };
-      })
-    );
+          readStream,
+        });
+      } catch (error) {
+        console.error(`Error processing image: ${error.message}`);
+      }
+    }
 
     return res.status(200).json({
-      message: "Images retrieved successfully.",
-      result: formattedImages,
+      message: "Images streaming successfully.",
+      result: [],
     });
   } catch (error) {
     console.error("Error:", error);

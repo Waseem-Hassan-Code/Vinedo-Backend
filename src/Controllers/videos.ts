@@ -11,8 +11,9 @@ import { commentsAggregate } from "../Model/Lookups/VideoComments";
 import { parseRange } from "../Helpers/ParseStreamRange";
 import { authorizedUser } from "../Helpers/validateUser";
 import { streamToBuffer } from "../Helpers";
+import io from "../Socket/index";
 
-//====================================Get Videos Thumbnails Creator=========================================
+//====================================Get Videos Creator=========================================
 
 export const getVideosThumbNails_Creator_ = async (
   req: express.Request,
@@ -99,17 +100,11 @@ export const getVideosThumbNails_Creator = async (
       isNaN(pageNumber) ||
       isNaN(pageSizeNumber) ||
       pageNumber <= 0 ||
-      pageSizeNumber <= 0
+      pageSizeNumber <= 0 ||
+      !creatorId
     ) {
       return res.status(400).json({
-        message: "Invalid page or pageSize parameters.",
-        result: [],
-      });
-    }
-
-    if (!creatorId) {
-      return res.status(404).json({
-        message: "Creator ID is required.",
+        message: "Invalid or missing parameters.",
         result: [],
       });
     }
@@ -126,26 +121,26 @@ export const getVideosThumbNails_Creator = async (
     const skip = (pageNumber - 1) * pageSizeNumber;
     const videos = await getAllVideosPaginated(creatorId, skip, pageSizeNumber);
 
-    const formattedThumbnails = await Promise.all(
-      videos.map(async (video) => {
+    for (const video of videos) {
+      try {
         const imagePath = video.fileName;
         const file = fileBucket.file(imagePath);
         const readStream = file.createReadStream();
 
-        const buffer = await streamToBuffer(readStream);
-
-        return {
+        io.emit("thumbnailData", {
           videoId: video._id,
           title: video.title,
           description: video.description,
-          ThumbnailData: buffer.toString("base64"),
-        };
-      })
-    );
+          readStream,
+        });
+      } catch (streamError) {
+        console.error("Error creating readable stream:", streamError);
+      }
+    }
 
     return res.status(200).json({
-      message: "Images retrieved successfully.",
-      result: formattedThumbnails,
+      message: "Thumbnails streaming successfully.",
+      result: { count: videos.length },
     });
   } catch (error) {
     console.error("Error retrieving videos:", error);
